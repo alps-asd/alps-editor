@@ -1,0 +1,5 @@
+{
+    "require": {
+        "koriym/app-state-diagram": "dev-api"
+    }
+}
