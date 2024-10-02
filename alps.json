@@ -26,8 +26,7 @@
                                     "type": "string"
                                 },
                                 "href": {
-                                    "type": "string",
-                                    "format": "uri"
+                                    "type": "string"
                                 }
                             },
                             "required": ["value"]
@@ -43,8 +42,7 @@
                                 "type": "string"
                             },
                             "href": {
-                                "type": "string",
-                                "format": "uri"
+                                "type": "string"
                             },
                             "value": {
                                 "type": "string"
@@ -59,8 +57,7 @@
                         "type": "object",
                         "properties": {
                             "href": {
-                                "type": "string",
-                                "format": "uri"
+                                "type": "string"
                             },
                             "rel": {
                                 "type": "string"
@@ -85,8 +82,7 @@
                                 "type": "string"
                             },
                             "href": {
-                                "type": "string",
-                                "format": "uri"
+                                "type": "string"
                             },
                             "doc": {
                                 "oneOf": [
@@ -103,8 +99,7 @@
                                                 "type": "string"
                                             },
                                             "href": {
-                                                "type": "string",
-                                                "format": "uri"
+                                                "type": "string"
                                             }
                                         },
                                         "required": ["value"]
@@ -120,8 +115,7 @@
                                             "type": "string"
                                         },
                                         "href": {
-                                            "type": "string",
-                                            "format": "uri"
+                                            "type": "string"
                                         },
                                         "value": {
                                             "type": "string"
@@ -161,8 +155,7 @@
                                     "type": "object",
                                     "properties": {
                                         "href": {
-                                            "type": "string",
-                                            "format": "uri"
+                                            "type": "string"
                                         },
                                         "rel": {
                                             "type": "string"
