@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASD - API リクエストフォーム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.6/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.6/ext-language_tools.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/6.12.6/ajv.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #editor {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 1000px;
+        }
+        .validation-mark {
+            margin-left: 10px;
+            font-size: 1.2em;
+        }
+        #controls {
+            margin-bottom: 10px;
+        }
+        #downloadBtn {
+            margin-top: 10px;
+        }
+        #fileTypeDisplay {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        #debug {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>ASD</h1>
+<form id="apiForm">
+    <div id="controls">
+        <span>ファイルタイプ: </span><span id="fileTypeDisplay"></span>
+        <span id="validationMark" class="validation-mark"></span>
+    </div>
+    <div id="editor"></div>
+    <button id="downloadBtn" type="button">ダウンロード</button>
+</form>
+<div id="debug"></div>
+
+<script>
+    const defaultJson = {
+        "$schema": "https://alps-io.github.io/schemas/alps.json",
+        "alps": {
+            "version": "1.0",
+            "descriptor": [
+
+            ]
+        }
+    };
+
+    let editor;
+    let debounceTimer;
+    let alpsSchema;
+    let ajv;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.setValue(JSON.stringify(defaultJson, null, 2));
+
+        ace.require("ace/ext/language_tools");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true
+        });
+
+        ajv = new Ajv({allErrors: true, verbose: true});
+
+        try {
+            const schemaResponse = await axios.get('/alps.json');
+            alpsSchema = schemaResponse.data;
+            debugLog('ALPSスキーマの取得に成功しました');
+        } catch (error) {
+            console.error('ALPSスキーマの取得に失敗しました:', error);
+            debugLog('ALPSスキーマの取得に失敗しました: ' + error.message);
+        }
+
+        editor.getSession().on('change', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(validateInput, 300);
+        });
+
+        validateInput();
+    });
+
+    function detectFileType(content) {
+        content = content.trim();
+        if (content.startsWith('{') || content.startsWith('[')) {
+            return 'JSON';
+        } else if (content.startsWith('<')) {
+            return 'XML';
+        }
+        return '不明';
+    }
+
+    async function validateInput() {
+        const content = editor.getValue();
+        const fileType = detectFileType(content);
+        document.getElementById('fileTypeDisplay').textContent = fileType;
+
+        const validationMark = document.getElementById('validationMark');
+
+        let isValid = false;
+
+        if (fileType === 'JSON') {
+            editor.getSession().setMode("ace/mode/json");
+            isValid = validateJson(content);
+        } else if (fileType === 'XML') {
+            editor.getSession().setMode("ace/mode/xml");
+            isValid = validateXml(content);
+        }
+
+        validationMark.textContent = isValid ? '✅' : '❌';
+        debugLog(`ファイルタイプ: ${fileType}, バリデーション結果: ${isValid ? '成功' : '失敗'}`);
+    }
+
+    function validateJson(content) {
+        try {
+            const data = JSON.parse(content);
+            debugLog('JSONパース成功');
+
+            const validate = ajv.compile(alpsSchema);
+            const result = validate(data);
+            if (!result) {
+                debugLog('JSONバリデーションエラー: ' + ajv.errorsText(validate.errors, {separator: '\n'}));
+            } else {
+                debugLog('JSONバリデーション成功');
+            }
+            return result;
+        } catch (error) {
+            debugLog('JSONパースまたはバリデーションエラー: ' + error.message);
+            return false;
+        }
+    }
+
+    function validateXml(content) {
+        try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(content, "text/xml");
+            const isValid = xmlDoc.getElementsByTagName("parsererror").length === 0;
+            if (!isValid) {
+                debugLog('XMLパースエラー: 不正なXML形式');
+            }
+            return isValid;
+        } catch (error) {
+            debugLog('XMLバリデーションエラー: ' + error.message);
+            return false;
+        }
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', async function() {
+        const content = editor.getValue();
+        const fileType = detectFileType(content);
+
+        try {
+            debugLog('APIリクエストを開始します...');
+            const response = await axios.post('/api/', content, {
+                headers: {
+                    'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
+                },
+                responseType: 'blob'
+            });
+
+            debugLog('APIレスポンス受信:');
+            debugLog(`ステータス: ${response.status}`);
+            debugLog(`ステータステキスト: ${response.statusText}`);
+            debugLog(`コンテンツタイプ: ${response.headers['content-type']}`);
+
+            if (response.headers['content-type'].includes('application/json')) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const jsonResponse = JSON.parse(reader.result);
+                    debugLog('APIレスポンス (JSON):');
+                    debugLog(JSON.stringify(jsonResponse, null, 2));
+                };
+                reader.readAsText(response.data);
+            } else {
+                debugLog('APIレスポンス: バイナリデータ (HTML)');
+            }
+
+            const blob = new Blob([response.data], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'result.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            debugLog('ダウンロードが完了しました');
+
+        } catch (error) {
+            console.error('エラーが発生しました:', error);
+            if (error.response) {
+                debugLog(`APIエラー: サーバーレスポンス - ステータス: ${error.response.status}, データ: ${JSON.stringify(error.response.data)}`);
+            } else if (error.request) {
+                debugLog('APIエラー: リクエストは送信されましたが、レスポンスがありませんでした');
+            } else {
+                debugLog('APIエラー: ' + error.message);
+            }
+        }
+    });
+
+    function debugLog(message) {
+        const debugElement = document.getElementById('debug');
+        debugElement.textContent += new Date().toISOString() + ': ' + message + '\n';
+        debugElement.scrollTop = debugElement.scrollHeight;
+    }
+</script>
+</body>
+</html>
