@@ -1,0 +1,76 @@
+body, html {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#top-bar {
+    background-color: black;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#title {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+#controls {
+    display: flex;
+    align-items: center;
+}
+
+#fileTypeDisplay {
+    margin-right: 10px;
+}
+
+#downloadBtn {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#main-container {
+    display: flex;
+    height: calc(100% - 50px); /* 50pxはtop-barの高さ */
+}
+
+#editor-container, #preview-container {
+    flex: 1;
+    height: 100%;
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+    border-right: 1px solid gray;
+}
+
+#preview-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#debug {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 5px;
+    max-height: 100px;
+    overflow-y: auto;
+    display: none;
+}
