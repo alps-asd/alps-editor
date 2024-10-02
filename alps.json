@@ -1,0 +1,186 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ALPS Schema",
+    "type": "object",
+    "required": ["alps"],
+    "properties": {
+        "alps": {
+            "type": "object",
+            "required": ["descriptor"],
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "doc": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "string"
+                                },
+                                "format": {
+                                    "type": "string"
+                                },
+                                "href": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            },
+                            "required": ["value"]
+                        }
+                    ]
+                },
+                "ext": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "href": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["id"]
+                    }
+                },
+                "link": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "href": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "rel": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["href", "rel"]
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "descriptor": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "oneOf": [
+                            {"required": ["id"]},
+                            {"required": ["href"]}
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "href": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "doc": {
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "string"
+                                            },
+                                            "format": {
+                                                "type": "string"
+                                            },
+                                            "href": {
+                                                "type": "string",
+                                                "format": "uri"
+                                            }
+                                        },
+                                        "required": ["value"]
+                                    }
+                                ]
+                            },
+                            "ext": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "href": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": ["id"]
+                                }
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": ["semantic", "safe", "idempotent", "unsafe"]
+                            },
+                            "rt": {
+                                "type": "string"
+                            },
+                            "def": {
+                                "type": "string"
+                            },
+                            "rel": {
+                                "type": "string"
+                            },
+                            "tag": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "link": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "href": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        },
+                                        "rel": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": ["href", "rel"]
+                                }
+                            },
+                            "descriptor": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/properties/alps/properties/descriptor/items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
