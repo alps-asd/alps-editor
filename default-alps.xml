@@ -4,6 +4,7 @@
         xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
     <title>ALPS Online Shopping</title>
     <doc>An ALPS profile for a simple online shopping system with multiple product lists and idempotent operations</doc>
+
     <!-- Ontology -->
     <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
     <descriptor id="name" def="https://schema.org/name" title="name"/>
@@ -12,6 +13,7 @@
     <descriptor id="quantity" def="https://schema.org/quantity" title="quantity"/>
     <descriptor id="email" def="https://schema.org/email" title="email"/>
     <descriptor id="address" def="https://schema.org/address" title="address"/>
+
     <!-- Taxonomy -->
     <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection">
         <descriptor href="#id"/>
@@ -44,6 +46,7 @@
     <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment">
         <descriptor href="#doPayment"/>
     </descriptor>
+
     <!-- Choreography -->
     <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list">
         <descriptor href="#id"/>

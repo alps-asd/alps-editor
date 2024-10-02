@@ -7,15 +7,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/github");
 
-    // デフォルトのXMLを読み込む
     try {
         const response = await fetch('/default-alps.xml');
         const defaultXml = await response.text();
         editor.setValue(defaultXml);
         editor.getSession().setMode("ace/mode/xml");
     } catch (error) {
-        console.error('デフォルトXMLの読み込みに失敗しました:', error);
-        debugLog('デフォルトXMLの読み込みに失敗しました: ' + error.message);
+        console.error('Failed to load default XML:', error);
+        debugLog('Failed to load default XML');
     }
 
     ace.require("ace/ext/language_tools");
@@ -30,10 +29,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         const schemaResponse = await axios.get('/alps.json');
         alpsSchema = schemaResponse.data;
-        debugLog('ALPSスキーマの取得に成功しました');
     } catch (error) {
-        console.error('ALPSスキーマの取得に失敗しました:', error);
-        debugLog('ALPSスキーマの取得に失敗しました: ' + error.message);
+        console.error('Failed to load ALPS schema:', error);
+        debugLog('Failed to load ALPS schema');
     }
 
     editor.getSession().on('change', function() {
@@ -44,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     validateAndPreview();
 });
 
-
 function detectFileType(content) {
     content = content.trim();
     if (content.startsWith('{') || content.startsWith('[')) {
@@ -52,7 +49,7 @@ function detectFileType(content) {
     } else if (content.startsWith('<')) {
         return 'XML';
     }
-    return '不明';
+    return 'Unknown';
 }
 
 async function validateAndPreview() {
@@ -73,7 +70,7 @@ async function validateAndPreview() {
     }
 
     validationMark.textContent = isValid ? '✅' : '❌';
-    debugLog(`ファイルタイプ: ${fileType}, バリデーション結果: ${isValid ? '成功' : '失敗'}`);
+    debugLog(`File type: ${fileType}, Validation: ${isValid ? 'Success' : 'Failure'}`);
 
     if (isValid) {
         updatePreview(content, fileType);
@@ -83,18 +80,14 @@ async function validateAndPreview() {
 function validateJson(content) {
     try {
         const data = JSON.parse(content);
-        debugLog('JSONパース成功');
-
         const validate = ajv.compile(alpsSchema);
         const result = validate(data);
         if (!result) {
-            debugLog('JSONバリデーションエラー: ' + ajv.errorsText(validate.errors, {separator: '\n'}));
-        } else {
-            debugLog('JSONバリデーション成功');
+            debugLog('JSON validation failed');
         }
         return result;
     } catch (error) {
-        debugLog('JSONパースまたはバリデーションエラー: ' + error.message);
+        debugLog('JSON parsing failed');
         return false;
     }
 }
@@ -105,18 +98,18 @@ function validateXml(content) {
         const xmlDoc = parser.parseFromString(content, "text/xml");
         const isValid = xmlDoc.getElementsByTagName("parsererror").length === 0;
         if (!isValid) {
-            debugLog('XMLパースエラー: 不正なXML形式');
+            debugLog('XML parsing failed');
         }
         return isValid;
     } catch (error) {
-        debugLog('XMLバリデーションエラー: ' + error.message);
+        debugLog('XML validation failed');
         return false;
     }
 }
 
 async function updatePreview(content, fileType) {
     try {
-        debugLog('プレビューの更新を開始します...');
+        debugLog('Updating preview...');
         const response = await axios.post('/api/', content, {
             headers: {
                 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
@@ -127,10 +120,10 @@ async function updatePreview(content, fileType) {
         const blob = new Blob([response.data], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         document.getElementById('preview-frame').src = url;
-        debugLog('プレビューの更新が完了しました');
+        debugLog('Preview updated');
     } catch (error) {
-        console.error('プレビューの更新中にエラーが発生しました:', error);
-        debugLog('プレビューエラー: ' + error.message);
+        console.error('Preview update failed:', error);
+        debugLog('Preview update failed');
     }
 }
 
@@ -139,7 +132,7 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
     const fileType = detectFileType(content);
 
     try {
-        debugLog('APIリクエストを開始します...');
+        debugLog('Starting API request...');
         const response = await axios.post('/api/', content, {
             headers: {
                 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
@@ -147,14 +140,7 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
             responseType: 'arraybuffer'
         });
 
-        debugLog('APIレスポンス受信:');
-        debugLog(`ステータス: ${response.status}`);
-        debugLog(`ステータステキスト: ${response.statusText}`);
-        debugLog(`コンテンツタイプ: ${response.headers['content-type']}`);
-
-        const responseText = new TextDecoder().decode(response.data);
-        debugLog('APIレスポンス内容:');
-        debugLog(responseText);
+        debugLog('API response received');
 
         const blob = new Blob([response.data], { type: 'text/html' });
         const url = window.URL.createObjectURL(blob);
@@ -165,27 +151,16 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        debugLog('ダウンロードが完了しました');
-
+        debugLog('Download completed');
     } catch (error) {
-        console.error('エラーが発生しました:', error);
-        if (error.response) {
-            debugLog(`APIエラー: サーバーレスポンス - ステータス: ${error.response.status}`);
-            if (error.response.data) {
-                const errorText = new TextDecoder().decode(error.response.data);
-                debugLog(`エラーデータ: ${errorText}`);
-            }
-        } else if (error.request) {
-            debugLog('APIエラー: リクエストは送信されましたが、レスポンスがありませんでした');
-        } else {
-            debugLog('APIエラー: ' + error.message);
-        }
+        console.error('Error occurred:', error);
+        debugLog('API request failed');
     }
 });
 
 function debugLog(message) {
     const debugElement = document.getElementById('debug');
-    debugElement.style.display = 'block';
-    debugElement.textContent += new Date().toISOString() + ': ' + message + '\n';
+    // debugElement.style.display = 'block';
+    debugElement.textContent += `${new Date().toISOString()}: ${message}\n`;
     debugElement.scrollTop = debugElement.scrollHeight;
 }
