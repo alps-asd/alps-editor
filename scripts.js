@@ -3,20 +3,10 @@ let debounceTimer;
 let alpsSchema;
 let ajv;
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize the editor
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/github");
-
-    try {
-        const response = await fetch('/default-alps.xml');
-        const defaultXml = await response.text();
-        editor.setValue(defaultXml);
-        editor.getSession().setMode("ace/mode/xml");
-    } catch (error) {
-        console.error('Failed to load default XML:', error);
-        debugLog('Failed to load default XML');
-    }
-
     ace.require("ace/ext/language_tools");
     editor.setOptions({
         enableBasicAutocompletion: true,
@@ -24,41 +14,51 @@ document.addEventListener('DOMContentLoaded', async function() {
         enableSnippets: true
     });
 
-    ajv = new Ajv({allErrors: true, verbose: true});
+    // Load default XML
+    try {
+        const response = await fetch('/default-alps.xml');
+        const defaultXml = await response.text();
+        editor.setValue(defaultXml);
+        editor.getSession().setMode("ace/mode/xml");
+    } catch (error) {
+        console.error('Failed to load default XML:', error);
+    }
 
+    // Load ALPS schema
+    ajv = new Ajv({ allErrors: true, verbose: true });
     try {
         const schemaResponse = await axios.get('/alps.json');
         alpsSchema = schemaResponse.data;
     } catch (error) {
         console.error('Failed to load ALPS schema:', error);
-        debugLog('Failed to load ALPS schema');
     }
 
-    editor.getSession().on('change', function() {
+    // Set up editor change event
+    editor.getSession().on('change', () => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(validateAndPreview, 300);
     });
 
+    // Display initial preview
     validateAndPreview();
 });
 
-function detectFileType(content) {
-    content = content.trim();
-    if (content.startsWith('{') || content.startsWith('[')) {
+const detectFileType = (content) => {
+    const trimmedContent = content.trim();
+    if (trimmedContent.startsWith('{') || trimmedContent.startsWith('[')) {
         return 'JSON';
-    } else if (content.startsWith('<')) {
+    } else if (trimmedContent.startsWith('<')) {
         return 'XML';
     }
     return 'Unknown';
-}
+};
 
-async function validateAndPreview() {
+const validateAndPreview = async () => {
     const content = editor.getValue();
     const fileType = detectFileType(content);
     document.getElementById('fileTypeDisplay').textContent = fileType;
 
     const validationMark = document.getElementById('validationMark');
-
     let isValid = false;
 
     if (fileType === 'JSON') {
@@ -70,46 +70,46 @@ async function validateAndPreview() {
     }
 
     validationMark.textContent = isValid ? '✅' : '❌';
-    debugLog(`File type: ${fileType}, Validation: ${isValid ? 'Success' : 'Failure'}`);
+    console.log(`File type: ${fileType}, Validation: ${isValid ? 'Success' : 'Failure'}`);
 
     if (isValid) {
         updatePreview(content, fileType);
     }
-}
+};
 
-function validateJson(content) {
+const validateJson = (content) => {
     try {
         const data = JSON.parse(content);
         const validate = ajv.compile(alpsSchema);
         const result = validate(data);
         if (!result) {
-            debugLog('JSON validation failed');
+            console.warn('JSON validation failed:', validate.errors);
         }
         return result;
     } catch (error) {
-        debugLog('JSON parsing failed');
+        console.warn('Failed to parse JSON:', error);
         return false;
     }
-}
+};
 
-function validateXml(content) {
+const validateXml = (content) => {
     try {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, "text/xml");
         const isValid = xmlDoc.getElementsByTagName("parsererror").length === 0;
         if (!isValid) {
-            debugLog('XML parsing failed');
+            console.warn('Failed to parse XML:', xmlDoc.getElementsByTagName("parsererror")[0].textContent);
         }
         return isValid;
     } catch (error) {
-        debugLog('XML validation failed');
+        console.warn('XML validation failed:', error);
         return false;
     }
-}
+};
 
-async function updatePreview(content, fileType) {
+const updatePreview = async (content, fileType) => {
     try {
-        debugLog('Updating preview...');
+        console.log('Updating preview...');
         const response = await axios.post('/api/', content, {
             headers: {
                 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
@@ -120,19 +120,22 @@ async function updatePreview(content, fileType) {
         const blob = new Blob([response.data], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         document.getElementById('preview-frame').src = url;
-        debugLog('Preview updated');
+        console.log('Preview updated');
     } catch (error) {
-        console.error('Preview update failed:', error);
-        debugLog('Preview update failed');
+        console.error('Failed to update preview:', error);
+        if (error.response && error.response.data) {
+            const errorData = new TextDecoder().decode(error.response.data);
+            console.error('Error response from server:', errorData);
+        }
     }
-}
+};
 
-document.getElementById('downloadBtn').addEventListener('click', async function() {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
     const content = editor.getValue();
     const fileType = detectFileType(content);
 
     try {
-        debugLog('Starting API request...');
+        console.log('Starting API request...');
         const response = await axios.post('/api/', content, {
             headers: {
                 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
@@ -140,7 +143,7 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
             responseType: 'arraybuffer'
         });
 
-        debugLog('API response received');
+        console.log('Received API response');
 
         const blob = new Blob([response.data], { type: 'text/html' });
         const url = window.URL.createObjectURL(blob);
@@ -151,16 +154,14 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        debugLog('Download completed');
+        console.log('Download completed');
     } catch (error) {
-        console.error('Error occurred:', error);
-        debugLog('API request failed');
+        console.error('API request failed:', error);
+        if (error.response && error.response.data) {
+            const errorData = new TextDecoder().decode(error.response.data);
+            console.error('Error response from server:', errorData);
+        }
     }
 });
 
-function debugLog(message) {
-    const debugElement = document.getElementById('debug');
-    // debugElement.style.display = 'block';
-    debugElement.textContent += `${new Date().toISOString()}: ${message}\n`;
-    debugElement.scrollTop = debugElement.scrollHeight;
-}
+// The unnecessary debugLog function has been removed
