@@ -1,5 +1,11 @@
 {
     "require": {
         "koriym/app-state-diagram": "dev-api"
+    },
+    "config": {
+        "process-timeout": 0
+    },
+    "scripts": {
+        "serve": "php -S localhost:8001 ./index.php"
     }
 }
