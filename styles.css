@@ -72,5 +72,5 @@ body, html {
     padding: 5px;
     max-height: 100px;
     overflow-y: auto;
-    display: none;
+    display: block;
 }
