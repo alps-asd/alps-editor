@@ -3,7 +3,10 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
     <title>ALPS Online Shopping</title>
-    <doc>An ALPS profile for a simple online shopping system with multiple product lists and idempotent operations</doc>
+    <doc>This is a sample ALPS profile demonstrating the semantic descriptors
+        and operations for a basic e-commerce system. It includes product listing,
+        shopping cart management, and checkout process, serving as an educational
+        example for ALPS implementation in online shopping contexts.</doc>
 
     <!-- Ontology -->
     <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
@@ -23,26 +26,30 @@
         <descriptor href="#goCart"/>
         <descriptor href="#goProductList"/>
     </descriptor>
+
     <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
         <descriptor href="#price"/>
         <descriptor href="#goProductList"/>
-        <descriptor href="#addToCart"/>
+        <descriptor href="#doAddToCart"/>
     </descriptor>
+
     <descriptor id="Cart" def="https://schema.org/ShoppingCart" title="Shopping Cart" tag="collection">
         <descriptor href="#id"/>
         <descriptor href="#goProductList"/>
         <descriptor href="#goCheckout"/>
-        <descriptor href="#updateQuantity"/>
-        <descriptor href="#removeItem"/>
+        <descriptor href="#doUpdateQuantity"/>
+        <descriptor href="#doRemoveItem"/>
     </descriptor>
+
     <descriptor id="Checkout" title="Checkout">
         <descriptor href="#email"/>
         <descriptor href="#address"/>
         <descriptor href="#goPayment"/>
     </descriptor>
+
     <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment">
         <descriptor href="#doPayment"/>
     </descriptor>
@@ -51,23 +58,31 @@
     <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list">
         <descriptor href="#id"/>
     </descriptor>
+
     <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
         <descriptor href="#id"/>
     </descriptor>
+
     <descriptor id="goCart" type="safe" rt="#Cart" title="View shopping cart"/>
+
     <descriptor id="goCheckout" type="safe" rt="#Checkout" title="Proceed to checkout"/>
+
     <descriptor id="goPayment" type="safe" rt="#Payment" title="Proceed to payment"/>
 
-    <descriptor id="addToCart" type="unsafe" rt="#Cart" title="Add product to cart">
+    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add product to cart">
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
-    <descriptor id="updateQuantity" type="idempotent" rt="#Cart" title="Update item quantity">
+
+    <descriptor id="doUpdateQuantity" type="idempotent" rt="#Cart" title="Update item quantity">
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
-    <descriptor id="removeItem" type="idempotent" rt="#Cart" title="Remove item from cart">
+
+    <descriptor id="doRemoveItem" type="idempotent" rt="#Cart" title="Remove item from cart">
         <descriptor href="#id"/>
     </descriptor>
+
     <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
+
 </alps>
