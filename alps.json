@@ -73,10 +73,6 @@
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "oneOf": [
-                            {"required": ["id"]},
-                            {"required": ["href"]}
-                        ],
                         "properties": {
                             "id": {
                                 "type": "string"
@@ -170,7 +166,11 @@
                                     "$ref": "#/properties/alps/properties/descriptor/items"
                                 }
                             }
-                        }
+                        },
+                        "oneOf": [
+                            {"required": ["id"]},
+                            {"required": ["href"]}
+                        ]
                     }
                 }
             }
