@@ -11,290 +11,161 @@
                 "version": {
                     "type": "string"
                 },
-                "doc": {
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "value": {
-                                    "type": "string"
-                                },
-                                "format": {
-                                    "type": "string",
-                                    "enum": ["text", "markdown", "html", "asciidoc"]
-                                },
-                                "href": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": ["value"]
-                        }
-                    ]
-                },
-                "ext": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "href": {
-                                "type": "string"
-                            },
-                            "value": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["id"]
-                    }
-                },
-                "link": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "href": {
-                                "type": "string"
-                            },
-                            "rel": {
-                                "type": "string",
-                                "oneOf": [
-                                    {
-                                        "enum": [
-                                            "about", "acl", "alternate", "amphtml", "appendix",
-                                            "apple-touch-icon", "apple-touch-startup-image", "archives",
-                                            "author", "blocked-by", "bookmark", "c2pa-manifest",
-                                            "canonical", "chapter", "cite-as", "collection",
-                                            "compression-dictionary", "contents", "convertedfrom",
-                                            "copyright", "create-form", "current", "describedby",
-                                            "describes", "disclosure", "dns-prefetch", "duplicate",
-                                            "edit", "edit-form", "edit-media", "enclosure", "external",
-                                            "first", "glossary", "help", "hosts", "hub", "ice-server",
-                                            "icon", "index", "intervalafter", "intervalbefore",
-                                            "intervalcontains", "intervaldisjoint", "intervalduring",
-                                            "intervalequals", "intervalfinishedby", "intervalfinishes",
-                                            "intervalin", "intervalmeets", "intervalmetby",
-                                            "intervaloverlappedby", "intervaloverlaps", "intervalstartedby",
-                                            "intervalstarts", "item", "last", "latest-version", "license",
-                                            "linkset", "lrdd", "manifest", "mask-icon", "me",
-                                            "media-feed", "memento", "micropub", "modulepreload",
-                                            "monitor", "monitor-group", "next", "next-archive", "nofollow",
-                                            "noopener", "noreferrer", "opener", "openid2.local_id",
-                                            "openid2.provider", "original", "p3pv1", "payment",
-                                            "pingback", "preconnect", "predecessor-version", "prefetch",
-                                            "preload", "prerender", "prev", "prev-archive", "preview",
-                                            "previous", "privacy-policy", "profile", "publication",
-                                            "related", "replies", "restconf", "ruleinput", "search",
-                                            "section", "self", "service", "service-desc", "service-doc",
-                                            "service-meta", "sip-trunking-capability", "sponsored",
-                                            "start", "status", "stylesheet", "subsection",
-                                            "successor-version", "sunset", "tag", "terms-of-service",
-                                            "timegate", "timemap", "type", "ugc", "up", "version-history",
-                                            "via", "webmention", "working-copy", "working-copy-of"
-                                        ]
-                                    },
-                                    {
-                                        "format": "uri"
-                                    }
-                                ]
-                            }
-                        },
-                        "required": ["href", "rel"]
-                    }
-                },
+                "doc": { "$ref": "#/definitions/doc" },
+                "ext": { "$ref": "#/definitions/ext" },
+                "link": { "$ref": "#/definitions/link" },
                 "title": {
                     "type": "string"
                 },
                 "descriptor": {
                     "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "href": {
-                                "type": "string"
-                            },
-                            "doc": {
-                                "oneOf": [
-                                    {
-                                        "type": "string"
-                                    },
-                                    {
-                                        "type": "object",
-                                        "properties": {
-                                            "value": {
-                                                "type": "string"
-                                            },
-                                            "format": {
-                                                "type": "string",
-                                                "enum": ["text", "markdown", "html", "asciidoc"]
-                                            },
-                                            "href": {
-                                                "type": "string",
-                                                "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                                            }
-                                        },
-                                        "required": ["value"]
-                                    }
-                                ]
-                            },
-                            "ext": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {
-                                            "type": "string"
-                                        },
-                                        "href": {
-                                            "type": "string",
-                                            "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                                        },
-                                        "value": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": ["id"]
-                                }
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "title": {
-                                "type": "string"
-                            },
-                            "type": {
-                                "type": "string",
-                                "enum": ["semantic", "safe", "idempotent", "unsafe"]
-                            },
-                            "rt": {
-                                "type": "string"
-                            },
-                            "def": {
-                                "type": "string"
-                            },
-                            "rel": {
-                                "type": "string",
-                                "oneOf": [
-                                    {
-                                        "enum": [
-                                            "about", "acl", "alternate", "amphtml", "appendix",
-                                            "apple-touch-icon", "apple-touch-startup-image", "archives",
-                                            "author", "blocked-by", "bookmark", "c2pa-manifest",
-                                            "canonical", "chapter", "cite-as", "collection",
-                                            "compression-dictionary", "contents", "convertedfrom",
-                                            "copyright", "create-form", "current", "describedby",
-                                            "describes", "disclosure", "dns-prefetch", "duplicate",
-                                            "edit", "edit-form", "edit-media", "enclosure", "external",
-                                            "first", "glossary", "help", "hosts", "hub", "ice-server",
-                                            "icon", "index", "intervalafter", "intervalbefore",
-                                            "intervalcontains", "intervaldisjoint", "intervalduring",
-                                            "intervalequals", "intervalfinishedby", "intervalfinishes",
-                                            "intervalin", "intervalmeets", "intervalmetby",
-                                            "intervaloverlappedby", "intervaloverlaps", "intervalstartedby",
-                                            "intervalstarts", "item", "last", "latest-version", "license",
-                                            "linkset", "lrdd", "manifest", "mask-icon", "me",
-                                            "media-feed", "memento", "micropub", "modulepreload",
-                                            "monitor", "monitor-group", "next", "next-archive", "nofollow",
-                                            "noopener", "noreferrer", "opener", "openid2.local_id",
-                                            "openid2.provider", "original", "p3pv1", "payment",
-                                            "pingback", "preconnect", "predecessor-version", "prefetch",
-                                            "preload", "prerender", "prev", "prev-archive", "preview",
-                                            "previous", "privacy-policy", "profile", "publication",
-                                            "related", "replies", "restconf", "ruleinput", "search",
-                                            "section", "self", "service", "service-desc", "service-doc",
-                                            "service-meta", "sip-trunking-capability", "sponsored",
-                                            "start", "status", "stylesheet", "subsection",
-                                            "successor-version", "sunset", "tag", "terms-of-service",
-                                            "timegate", "timemap", "type", "ugc", "up", "version-history",
-                                            "via", "webmention", "working-copy", "working-copy-of"
-                                        ]
-                                    },
-                                    {
-                                        "format": "uri"
-                                    }
-                                ]
-                            },
-                            "tag": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "link": {
-                                "type": "object",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "href": {
-                                            "type": "string"
-                                        },
-                                        "rel": {
-                                            "type": "string",
-                                            "oneOf": [
-                                                {
-                                                    "enum": [
-                                                        "about", "acl", "alternate", "amphtml", "appendix",
-                                                        "apple-touch-icon", "apple-touch-startup-image", "archives",
-                                                        "author", "blocked-by", "bookmark", "c2pa-manifest",
-                                                        "canonical", "chapter", "cite-as", "collection",
-                                                        "compression-dictionary", "contents", "convertedfrom",
-                                                        "copyright", "create-form", "current", "describedby",
-                                                        "describes", "disclosure", "dns-prefetch", "duplicate",
-                                                        "edit", "edit-form", "edit-media", "enclosure", "external",
-                                                        "first", "glossary", "help", "hosts", "hub", "ice-server",
-                                                        "icon", "index", "intervalafter", "intervalbefore",
-                                                        "intervalcontains", "intervaldisjoint", "intervalduring",
-                                                        "intervalequals", "intervalfinishedby", "intervalfinishes",
-                                                        "intervalin", "intervalmeets", "intervalmetby",
-                                                        "intervaloverlappedby", "intervaloverlaps", "intervalstartedby",
-                                                        "intervalstarts", "item", "last", "latest-version", "license",
-                                                        "linkset", "lrdd", "manifest", "mask-icon", "me",
-                                                        "media-feed", "memento", "micropub", "modulepreload",
-                                                        "monitor", "monitor-group", "next", "next-archive", "nofollow",
-                                                        "noopener", "noreferrer", "opener", "openid2.local_id",
-                                                        "openid2.provider", "original", "p3pv1", "payment",
-                                                        "pingback", "preconnect", "predecessor-version", "prefetch",
-                                                        "preload", "prerender", "prev", "prev-archive", "preview",
-                                                        "previous", "privacy-policy", "profile", "publication",
-                                                        "related", "replies", "restconf", "ruleinput", "search",
-                                                        "section", "self", "service", "service-desc", "service-doc",
-                                                        "service-meta", "sip-trunking-capability", "sponsored",
-                                                        "start", "status", "stylesheet", "subsection",
-                                                        "successor-version", "sunset", "tag", "terms-of-service",
-                                                        "timegate", "timemap", "type", "ugc", "up", "version-history",
-                                                        "via", "webmention", "working-copy", "working-copy-of"
-                                                    ]
-                                                },
-                                                {
-                                                    "format": "uri"
-                                                }
-                                            ]
-                                        }
-                                    },
-                                    "required": ["href", "rel"]
-                                }
-                            },
-                            "descriptor": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/properties/alps/properties/descriptor/items"
-                                }
-                            }
-                        },
-                        "oneOf": [
-                            {"required": ["id"]},
-                            {"required": ["href"]}
-                        ]
-                    }
+                    "items": { "$ref": "#/definitions/descriptor" }
                 }
             }
+        }
+    },
+    "definitions": {
+        "doc": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "type": "string"
+                        },
+                        "format": {
+                            "type": "string",
+                            "enum": ["text", "markdown", "html", "asciidoc"]
+                        },
+                        "href": {
+                            "type": "string",
+                            "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
+                        }
+                    },
+                    "required": ["value"]
+                }
+            ]
+        },
+        "ext": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "href": {
+                        "type": "string",
+                        "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "required": ["id"]
+            }
+        },
+        "relEnum": {
+            "enum": [
+                "about", "acl", "alternate", "amphtml", "appendix",
+                "apple-touch-icon", "apple-touch-startup-image", "archives",
+                "author", "blocked-by", "bookmark", "c2pa-manifest",
+                "canonical", "chapter", "cite-as", "collection",
+                "compression-dictionary", "contents", "convertedfrom",
+                "copyright", "create-form", "current", "describedby",
+                "describes", "disclosure", "dns-prefetch", "duplicate",
+                "edit", "edit-form", "edit-media", "enclosure", "external",
+                "first", "glossary", "help", "hosts", "hub", "ice-server",
+                "icon", "index", "intervalafter", "intervalbefore",
+                "intervalcontains", "intervaldisjoint", "intervalduring",
+                "intervalequals", "intervalfinishedby", "intervalfinishes",
+                "intervalin", "intervalmeets", "intervalmetby",
+                "intervaloverlappedby", "intervaloverlaps", "intervalstartedby",
+                "intervalstarts", "item", "last", "latest-version", "license",
+                "linkset", "lrdd", "manifest", "mask-icon", "me",
+                "media-feed", "memento", "micropub", "modulepreload",
+                "monitor", "monitor-group", "next", "next-archive", "nofollow",
+                "noopener", "noreferrer", "opener", "openid2.local_id",
+                "openid2.provider", "original", "p3pv1", "payment",
+                "pingback", "preconnect", "predecessor-version", "prefetch",
+                "preload", "prerender", "prev", "prev-archive", "preview",
+                "previous", "privacy-policy", "profile", "publication",
+                "related", "replies", "restconf", "ruleinput", "search",
+                "section", "self", "service", "service-desc", "service-doc",
+                "service-meta", "sip-trunking-capability", "sponsored",
+                "start", "status", "stylesheet", "subsection",
+                "successor-version", "sunset", "tag", "terms-of-service",
+                "timegate", "timemap", "type", "ugc", "up", "version-history",
+                "via", "webmention", "working-copy", "working-copy-of"
+            ]
+        },
+        "relType": {
+            "type": "string",
+            "oneOf": [
+                { "$ref": "#/definitions/relEnum" },
+                { "format": "uri" }
+            ]
+        },
+        "link": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "href": {
+                        "type": "string",
+                        "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
+                    },
+                    "rel": { "$ref": "#/definitions/relType" }
+                },
+                "required": ["href"]
+            }
+        },
+        "descriptor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "href": {
+                    "type": "string",
+                    "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
+                },
+                "doc": { "$ref": "#/definitions/doc" },
+                "ext": { "$ref": "#/definitions/ext" },
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["semantic", "safe", "idempotent", "unsafe"]
+                },
+                "rt": {
+                    "type": "string"
+                },
+                "def": {
+                    "type": "string"
+                },
+                "rel": { "$ref": "#/definitions/relType" },
+                "tag": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "link": { "$ref": "#/definitions/link" },
+                "descriptor": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/descriptor" }
+                }
+            },
+            "oneOf": [
+                { "required": ["id"] },
+                { "required": ["href"] }
+            ]
         }
     }
 }
