@@ -25,6 +25,14 @@
         }
     },
     "definitions": {
+        "href": {
+            "type": "string",
+            "oneOf": [
+                { "format": "uri" },
+                { "pattern": "^#" },
+                { "pattern": "^[^#\\s]+#?" }
+            ]
+        },
         "doc": {
             "oneOf": [
                 {
@@ -40,10 +48,7 @@
                             "type": "string",
                             "enum": ["text", "markdown", "html", "asciidoc"]
                         },
-                        "href": {
-                            "type": "string",
-                            "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                        }
+                        "href": { "$ref": "#/definitions/href" }
                     },
                     "required": ["value"]
                 }
@@ -57,10 +62,7 @@
                     "id": {
                         "type": "string"
                     },
-                    "href": {
-                        "type": "string",
-                        "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                    },
+                    "href": { "$ref": "#/definitions/href" },
                     "value": {
                         "type": "string"
                     }
@@ -114,10 +116,7 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "href": {
-                        "type": "string",
-                        "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                    },
+                    "href": { "$ref": "#/definitions/href" },
                     "rel": { "$ref": "#/definitions/relType" }
                 },
                 "required": ["href"]
@@ -129,10 +128,7 @@
                 "id": {
                     "type": "string"
                 },
-                "href": {
-                    "type": "string",
-                    "pattern": "^#|[a-zA-Z][a-zA-Z0-9+.-]*:"
-                },
+                "href": { "$ref": "#/definitions/href" },
                 "doc": { "$ref": "#/definitions/doc" },
                 "ext": { "$ref": "#/definitions/ext" },
                 "name": {
