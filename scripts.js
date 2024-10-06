@@ -55,6 +55,28 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('downloadBtn').click();
         }
     });
+
+    // Set drag and drop
+    var dropArea = document.getElementById('editor-container');
+    dropArea.addEventListener('dragover', function(event) {
+        event.preventDefault();
+    });
+    dropArea.addEventListener('drop', function(event) {
+        event.preventDefault();
+        var file = event.dataTransfer.files[0];
+
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var content = e.target.result;
+                editor.setValue(content);
+                console.log('Dropped:', file.name);
+            };
+            reader.readAsText(file);
+            validateAndPreview();
+        }
+    });
+
 });
 
 function detectFileType(content) {
