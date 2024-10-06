@@ -146,7 +146,7 @@ function handleApiError(errorResponse) {
         customAnnotations = [{
             row: errorData['line'] ? errorData['line'] - 1 : 0,
             column: 0,
-            text: `API Error (${errorResponse.status}): ${errorData['error-message']}`,
+            text: `(${errorResponse.status}): ${errorData['error-message']}`,
             type: "error"
         }];
         debugLog(`API Error: ${errorData['error-message']}`);
@@ -154,7 +154,7 @@ function handleApiError(errorResponse) {
         customAnnotations = [{
             row: 0,
             column: 0,
-            text: `API Error (${errorResponse.status}): Unknown error`,
+            text: `(${errorResponse.status}): ${errorData['class']}:${errorData['exception-message']}`,
             type: "error"
         }];
         debugLog('API returned an unknown error');

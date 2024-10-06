@@ -59,7 +59,7 @@ try {
     }
     echo json_encode(
       [
-          'class' => $e::class,
+          'class' => (new ReflectionClass($e))->getShortName(),
           'exception-message' => $e->getMessage(),
           'error-message' => $errorMessage,
           'line' => $line
