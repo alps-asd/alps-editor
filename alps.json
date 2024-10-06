@@ -180,8 +180,8 @@
                 },
                 "rt": {
                     "type": "string",
-                    "pattern": "^(#|[^\\s]+#[a-zA-Z0-9._-]+)$",
-                    "errorMessage": "The 'rt' of 'descriptor' must be a fragment (e.g., '#foo') or a URI containing a fragment (e.g., 'http://example.com#foo')."
+                    "pattern": "#[a-zA-Z0-9._-]+$",
+                    "errorMessage": "The 'rt' of 'descriptor' must be a string starting with '#' or a resolvable URL with a fragment identifier. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.13"
                 },
                 "def": {
                     "type": "string",
