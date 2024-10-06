@@ -47,6 +47,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     validateAndPreview();
+
+    // save short-cut key
+    document.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+            event.preventDefault();
+            document.getElementById('downloadBtn').click();
+        }
+    });
 });
 
 function detectFileType(content) {
