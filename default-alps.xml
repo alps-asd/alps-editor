@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- You can also open files by dropping ALPS files here.-->
 <alps
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
@@ -78,7 +79,6 @@
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
-
     <descriptor id="doRemoveItem" type="idempotent" rt="#Cart" title="Remove item from cart">
         <descriptor href="#id"/>
     </descriptor>
