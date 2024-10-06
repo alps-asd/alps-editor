@@ -1,6 +1,8 @@
 <?php
 
+use Koriym\AlpsEditor\InvalidXsdMessage;
 use Koriym\AppStateDiagram\Asd;
+use Koriym\XmlLoader\Exception\InvalidXmlException;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -49,6 +51,19 @@ try {
     exit(0);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo $e::class . ':' . $e->getMessage();
+    $eClass = $e::class;
+    $errorMessage = '';
+    $line = '';
+    if ($e instanceof InvalidXmlException){
+        [$errorMessage, $line] = (new InvalidXsdMessage())->getLine($e->getMessage());
+    }
+    echo json_encode(
+      [
+          'class' => $e::class,
+          'exception-message' => $e->getMessage(),
+          'error-message' => $errorMessage,
+          'line' => $line
+      ]
+    );
     exit(1);
 }
