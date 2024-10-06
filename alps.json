@@ -180,7 +180,8 @@
                 },
                 "rt": {
                     "type": "string",
-                    "errorMessage": "The 'rt' of 'descriptor' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.13"
+                    "pattern": "^(#|[^\\s]+#[a-zA-Z0-9._-]+)$",
+                    "errorMessage": "The 'rt' of 'descriptor' must be a fragment (e.g., '#foo') or a URI containing a fragment (e.g., 'http://example.com#foo')."
                 },
                 "def": {
                     "type": "string",
