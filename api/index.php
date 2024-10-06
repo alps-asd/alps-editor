@@ -2,6 +2,7 @@
 
 use Koriym\AlpsEditor\InvalidXsdMessage;
 use Koriym\AppStateDiagram\Asd;
+use Koriym\AppStateDiagram\Exception\DescriptorNotFoundException;
 use Koriym\XmlLoader\Exception\InvalidXmlException;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -53,15 +54,21 @@ try {
     http_response_code(500);
     $eClass = $e::class;
     $errorMessage = '';
+    $invalidWord = '';
     $line = '';
+    $eMessage = $e->getMessage();
     if ($e instanceof InvalidXmlException){
         [$errorMessage, $line] = (new InvalidXsdMessage())->getLine($e->getMessage());
+    }
+    if ($e instanceof DescriptorNotFoundException) {
+        [$errorMessage, $invalidWord] = ["Descriptor not found", $eMessage];
     }
     echo json_encode(
       [
           'class' => (new ReflectionClass($e))->getShortName(),
           'exception-message' => $e->getMessage(),
           'error-message' => $errorMessage,
+          'invalid-word' => $invalidWord,
           'line' => $line
       ]
     );

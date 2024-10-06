@@ -143,13 +143,18 @@ function handleApiError(errorResponse) {
     }
 
     if (errorData && errorData['error-message']) {
-        customAnnotations = [{
-            row: errorData['line'] ? errorData['line'] - 1 : 0,
-            column: 0,
-            text: `(${errorResponse.status}): ${errorData['error-message']}`,
-            type: "error"
-        }];
-        debugLog(`API Error: ${errorData['error-message']}`);
+        if (errorData['invalid-word']) {
+            // 無効な単語に基づいてアノテーションを追加
+            addInvalidWordAnnotations(errorData, editor.getValue());
+        } else {
+            customAnnotations = [{
+                row: errorData['line'] ? errorData['line'] - 1 : 0,
+                column: 0,
+                text: `(${errorResponse.status}): ${errorData['error-message']}`,
+                type: "error"
+            }];
+            debugLog(`API Error: ${errorData['error-message']}`);
+        }
     } else {
         customAnnotations = [{
             row: 0,
@@ -354,6 +359,27 @@ function getPositionFromDataPath(content, dataPath) {
     } catch (e) {
         return { line: 0, column: 0 };
     }
+}
+
+function addInvalidWordAnnotations(errorData, content) {
+    const invalidWord = errorData['invalid-word'];
+    const searchWord = '"#' + errorData['invalid-word'] + '"';
+    if (!invalidWord) return;
+
+    const lines = content.split('\n');
+    const errorMessage = errorData['error-message'];
+
+    lines.forEach((line, index) => {
+        if (line.includes(searchWord)) {
+            const column = line.indexOf(searchWord);
+            customAnnotations = [{
+                row: index,
+                column: column,
+                text: `${errorMessage} ("${invalidWord}")`,
+                type: "error"
+            }];
+        }
+    });
 }
 
 function debugLog(message) {
