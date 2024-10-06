@@ -54,21 +54,21 @@ try {
     http_response_code(500);
     $eClass = $e::class;
     $errorMessage = '';
-    $invalidWord = '';
+    $invalidDescriptor = '';
     $line = '';
     $eMessage = $e->getMessage();
     if ($e instanceof InvalidXmlException){
         [$errorMessage, $line] = (new InvalidXsdMessage())->getLine($e->getMessage());
     }
     if ($e instanceof DescriptorNotFoundException) {
-        [$errorMessage, $invalidWord] = ["Descriptor not found", $eMessage];
+        [$errorMessage, $invalidDescriptor] = ["Descriptor not found", $eMessage];
     }
     echo json_encode(
       [
           'class' => (new ReflectionClass($e))->getShortName(),
           'exception-message' => $e->getMessage(),
           'error-message' => $errorMessage,
-          'invalid-word' => $invalidWord,
+          'invalid-descriptor' => $invalidDescriptor,
           'line' => $line
       ]
     );

@@ -143,8 +143,8 @@ function handleApiError(errorResponse) {
     }
 
     if (errorData && errorData['error-message']) {
-        if (errorData['invalid-word']) {
-            // 無効な単語に基づいてアノテーションを追加
+        if (errorData['invalid-descriptor']) {
+            // 無効なディスクリプターに基づいてアノテーションを追加
             addInvalidWordAnnotations(errorData, editor.getValue());
         } else {
             customAnnotations = [{
@@ -280,10 +280,10 @@ function processValidationErrors(errors, ajvInstance, content) {
         let path = error.dataPath || '';
 
         if (error.parentSchema && error.parentSchema.errorMessage) {
-            if (error.keyword === 'oneOf') {
+            if (error.keydescriptor === 'oneOf') {
                 // Handle the case where errorMessage is an object
                 if (typeof error.parentSchema.errorMessage === 'object') {
-                    message = error.parentSchema.errorMessage[error.keyword] || JSON.stringify(error.parentSchema.errorMessage);
+                    message = error.parentSchema.errorMessage[error.keydescriptor] || JSON.stringify(error.parentSchema.errorMessage);
                 } else {
                     message = error.parentSchema.errorMessage;
                 }
@@ -362,9 +362,9 @@ function getPositionFromDataPath(content, dataPath) {
 }
 
 function addInvalidWordAnnotations(errorData, content) {
-    const invalidWord = errorData['invalid-word'];
-    const searchWord = '"#' + errorData['invalid-word'] + '"';
-    if (!invalidWord) return;
+    const invalidDescriptor = errorData['invalid-descriptor'];
+    const searchWord = '"#' + errorData['invalid-descriptor'] + '"';
+    if (!invalidDescriptor) return;
 
     const lines = content.split('\n');
     const errorMessage = errorData['error-message'];
@@ -375,7 +375,7 @@ function addInvalidWordAnnotations(errorData, content) {
             customAnnotations = [{
                 row: index,
                 column: column,
-                text: `${errorMessage} ("${invalidWord}")`,
+                text: `${errorMessage} ("${invalidDescriptor}")`,
                 type: "error"
             }];
         }
