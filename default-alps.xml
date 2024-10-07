@@ -14,7 +14,7 @@
     <descriptor id="name" def="https://schema.org/name" title="name"/>
     <descriptor id="description" def="https://schema.org/description" title="description"/>
     <descriptor id="price" def="https://schema.org/price" title="price"/>
-    <descriptor id="quantity" def="https://schema.org/quantity" title="quantity"/>
+    <descriptor id="quantity" def="https://schema.org/Quantity" title="quantity"/>
     <descriptor id="email" def="https://schema.org/email" title="email"/>
     <descriptor id="address" def="https://schema.org/address" title="address"/>
 
@@ -37,7 +37,7 @@
         <descriptor href="#doAddToCart"/>
     </descriptor>
 
-    <descriptor id="Cart" def="https://schema.org/ShoppingCart" title="Shopping Cart" tag="collection">
+    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection">
         <descriptor href="#id"/>
         <descriptor href="#goProductList"/>
         <descriptor href="#goCheckout"/>
