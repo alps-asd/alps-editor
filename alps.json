@@ -189,9 +189,8 @@
                 },
                 "rel": { "$ref": "#/definitions/relType" },
                 "tag": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "errorMessage": "The 'tag' must be an array of strings. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.14"
+                    "type": "string",
+                    "errorMessage": "The 'tag' must be a strings. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.14"
                 },
                 "link": { "$ref": "#/definitions/link" },
                 "descriptor": {
