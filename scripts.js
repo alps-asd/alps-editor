@@ -4,80 +4,110 @@ let alpsSchema;
 let ajv;
 let customAnnotations = [];
 
-document.addEventListener('DOMContentLoaded', async function() {
+import { SEMANTIC_TERMS } from './semanticTerms.js';
+
+document.addEventListener('DOMContentLoaded', initEditor);
+
+async function initEditor() {
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/github");
 
+    configureAceEditor();
+    await loadDefaultXml();
+    await setupCompletion();
+    setupSaveShortcut();
+    setupDragAndDrop();
+    setupCompleteHref();
+}
+
+function configureAceEditor() {
+    ace.require("ace/ext/language_tools");
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: true,
+    });
+}
+
+async function loadDefaultXml() {
     try {
         const response = await fetch('/default-alps.xml');
         const defaultXml = await response.text();
         editor.setValue(defaultXml);
         editor.getSession().setMode("ace/mode/xml");
     } catch (error) {
-        console.error('Failed to load default XML:', error);
-        debugLog('Failed to load default XML');
+        handleError(error, 'Failed to load default XML');
     }
+}
 
-    ace.require("ace/ext/language_tools");
-    editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
-        enableSnippets: true
-    });
-
-    ajv = new Ajv({allErrors: true, verbose: true});
+async function setupCompletion() {
+    ajv = new Ajv({ allErrors: true, verbose: true });
 
     try {
         const schemaResponse = await axios.get('/alps.json');
         alpsSchema = schemaResponse.data;
     } catch (error) {
-        console.error('Failed to load ALPS schema:', error);
-        debugLog('Failed to load ALPS schema');
+        handleError(error, 'Failed to load ALPS schema');
     }
 
     const originalSetAnnotations = editor.getSession().setAnnotations;
-    editor.getSession().setAnnotations = function(annotations) {
+    editor.getSession().setAnnotations = function (annotations) {
         const combinedAnnotations = (annotations || []).concat(customAnnotations);
         originalSetAnnotations.call(this, combinedAnnotations);
     };
 
-    editor.getSession().on('change', function() {
+    editor.getSession().on('change', function () {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(validateAndPreview, 300);
     });
 
     validateAndPreview();
+}
 
-    // save short-cut key
-    document.addEventListener('keydown', function(event) {
+function setupSaveShortcut() {
+    // Save shortcut key
+    document.addEventListener('keydown', function (event) {
         if ((event.ctrlKey || event.metaKey) && event.key === 's') {
             event.preventDefault();
             document.getElementById('downloadBtn').click();
         }
     });
+}
 
-    // Set drag and drop
-    var dropArea = document.getElementById('editor-container');
-    dropArea.addEventListener('dragover', function(event) {
+function setupDragAndDrop() {
+    const dropArea = document.getElementById('editor-container');
+    dropArea.addEventListener('dragover', function (event) {
         event.preventDefault();
     });
-    dropArea.addEventListener('drop', function(event) {
+
+    dropArea.addEventListener('drop', function (event) {
         event.preventDefault();
-        var file = event.dataTransfer.files[0];
+        const file = event.dataTransfer.files[0];
 
         if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var content = e.target.result;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
                 editor.setValue(content);
                 console.log('Dropped:', file.name);
+                validateAndPreview();
             };
             reader.readAsText(file);
-            validateAndPreview();
         }
     });
+}
 
-});
+function setupCompleteHref() {
+    // Watch for changes to trigger autocomplete
+    editor.commands.on('afterExec', function (e) {
+        if (e.command.name === 'insertstring' && e.args === '#') {
+            const existingCompleters = editor.completers || [];
+            editor.completers = [hrefCompleter];
+            editor.execCommand('startAutocomplete');
+            editor.completers = existingCompleters;
+        }
+    });
+}
 
 function detectFileType(content) {
     content = content.trim();
@@ -94,23 +124,35 @@ async function validateAndPreview() {
     const fileType = detectFileType(content);
     document.getElementById('fileTypeDisplay').textContent = fileType;
 
-    let isLocallyValid = false;
-
-    if (fileType === 'JSON') {
-        editor.getSession().setMode("ace/mode/json");
-        isLocallyValid = validateJson(content);
-    } else if (fileType === 'XML') {
-        editor.getSession().setMode("ace/mode/xml");
-        isLocallyValid = validateXml(content);
-    }
+    const isLocallyValid = validateContent(content, fileType);
 
     debugLog(`File type: ${fileType}, Local Validation: ${isLocallyValid ? 'Success' : 'Failure'}`);
 
     if (isLocallyValid) {
-        await performApiValidationAndPreview(content, fileType);
+        await updatePreview(content, fileType);
     } else {
         updateValidationMark(false);
     }
+}
+
+function validateContent(content, fileType) {
+    let isLocallyValid = false;
+
+    if (fileType === 'JSON') {
+        editor.getSession().setMode('ace/mode/json');
+        isLocallyValid = validateJson(content);
+        editor.completers = [alpsJsonCompleter];
+    } else if (fileType === 'XML') {
+        editor.getSession().setMode('ace/mode/xml');
+        isLocallyValid = validateXml(content);
+        editor.completers = [alpsXmlCompleter];
+    }
+
+    return isLocallyValid;
+}
+
+async function updatePreview(content, fileType) {
+    await performApiValidationAndPreview(content, fileType);
 }
 
 async function performApiValidationAndPreview(content, fileType) {
@@ -118,44 +160,40 @@ async function performApiValidationAndPreview(content, fileType) {
         debugLog('Calling API for validation and preview...');
         const response = await axios.post('/api/', content, {
             headers: {
-                'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
+                'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml',
             },
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
         });
 
-        // ステータスコードが200の場合のみ成功とみなす
         if (response.status === 200) {
-            // バリデーション成功、プレビューを更新
             const blob = new Blob([response.data], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             document.getElementById('preview-frame').src = url;
             debugLog('Preview updated');
             updateValidationMark(true);
-            customAnnotations = []; // カスタムアノテーションをクリア
+            customAnnotations = [];
         } else {
-            // 200以外のステータスコードはすべてエラーとして扱う
             throw new Error(`Unexpected status code: ${response.status}`);
         }
-
     } catch (error) {
-        console.error('API call failed:', error);
-        debugLog('API call failed');
+        handleError(error, 'API call failed');
         updateValidationMark(false);
 
         if (error.response) {
             handleApiError(error.response);
         } else {
-            // ネットワークエラーなどの場合
-            customAnnotations = [{
-                row: 0,
-                column: 0,
-                text: "API call failed: " + error.message,
-                type: "error"
-            }];
+            customAnnotations = [
+                {
+                    row: 0,
+                    column: 0,
+                    text: 'API call failed: ' + error.message,
+                    type: 'error',
+                },
+            ];
         }
     }
 
-    // 強制的にアノテーションを再描画
+    // Force re-rendering of annotations
     editor.getSession().setAnnotations(editor.getSession().getAnnotations());
 }
 
@@ -167,31 +205,33 @@ function handleApiError(errorResponse) {
         const decodedData = decoder.decode(errorResponse.data);
         errorData = JSON.parse(decodedData);
     } catch (parseError) {
-        console.error('Error parsing error response:', parseError);
-        debugLog(`Error parsing error response: ${parseError.message}`);
+        handleError(parseError, 'Error parsing error response');
         errorData = { 'error-message': 'Unknown error occurred' };
     }
 
     if (errorData && errorData['error-message']) {
         if (errorData['invalid-descriptor']) {
-            // 無効なディスクリプターに基づいてアノテーションを追加
             addInvalidWordAnnotations(errorData, editor.getValue());
         } else {
-            customAnnotations = [{
-                row: errorData['line'] ? errorData['line'] - 1 : 0,
-                column: 0,
-                text: `(${errorResponse.status}): ${errorData['error-message']}`,
-                type: "error"
-            }];
+            customAnnotations = [
+                {
+                    row: errorData['line'] ? errorData['line'] - 1 : 0,
+                    column: 0,
+                    text: `(${errorResponse.status}): ${errorData['error-message']}`,
+                    type: 'error',
+                },
+            ];
             debugLog(`API Error: ${errorData['error-message']}`);
         }
     } else {
-        customAnnotations = [{
-            row: 0,
-            column: 0,
-            text: `(${errorResponse.status}): ${errorData['class']}:${errorData['exception-message']}`,
-            type: "error"
-        }];
+        customAnnotations = [
+            {
+                row: 0,
+                column: 0,
+                text: `(${errorResponse.status}): ${errorData['class']}:${errorData['exception-message']}`,
+                type: 'error',
+            },
+        ];
         debugLog('API returned an unknown error');
     }
 }
@@ -206,6 +246,8 @@ function validateJson(content) {
             console.log('AJV errors:', validate.errors);
             debugLog('JSON schema validation failed');
             annotations = processValidationErrors(validate.errors, ajv, content);
+        } else {
+            editor.session.clearAnnotations();
         }
         editor.session.setAnnotations(annotations);
         return result;
@@ -216,7 +258,7 @@ function validateJson(content) {
             row: position.line,
             column: position.column,
             text: error.message,
-            type: "error"
+            type: 'error',
         });
         editor.session.setAnnotations(annotations);
         return false;
@@ -240,10 +282,12 @@ function getPositionFromParseError(error, content) {
 function validateXml(content) {
     try {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(content, "text/xml");
-        const isValid = xmlDoc.getElementsByTagName("parsererror").length === 0;
+        const xmlDoc = parser.parseFromString(content, 'text/xml');
+        const isValid = xmlDoc.getElementsByTagName('parsererror').length === 0;
         if (!isValid) {
             debugLog('Invalid XML form');
+        } else {
+            editor.session.clearAnnotations();
         }
         return isValid;
     } catch (error) {
@@ -257,7 +301,7 @@ function updateValidationMark(isValid) {
     validationMark.textContent = isValid ? '✅' : '❌';
 }
 
-document.getElementById('downloadBtn').addEventListener('click', async function() {
+document.getElementById('downloadBtn').addEventListener('click', async function () {
     const content = editor.getValue();
     const fileType = detectFileType(content);
 
@@ -265,9 +309,9 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
         debugLog('Starting API request...');
         const response = await axios.post('/api/', content, {
             headers: {
-                'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml'
+                'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml',
             },
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
         });
 
         debugLog('API response received');
@@ -283,18 +327,11 @@ document.getElementById('downloadBtn').addEventListener('click', async function(
         window.URL.revokeObjectURL(url);
         debugLog('Download completed');
 
-        // Update validation mark to success
-        const validationMark = document.getElementById('validationMark');
-        validationMark.textContent = '✅';
+        updateValidationMark(true);
     } catch (error) {
-        console.error('Error occurred:', response.body);
-        debugLog('API request failed:' . res);
+        handleError(error, 'API request failed');
+        updateValidationMark(false);
 
-        // Update validation mark to failure
-        const validationMark = document.getElementById('validationMark');
-        validationMark.textContent = '❌';
-
-        // Log error details
         if (error.response) {
             debugLog(`Error status: ${error.response.status}`);
             debugLog(`Error body: ${new TextDecoder().decode(error.response.data)}`);
@@ -310,10 +347,11 @@ function processValidationErrors(errors, ajvInstance, content) {
         let path = error.dataPath || '';
 
         if (error.parentSchema && error.parentSchema.errorMessage) {
-            if (error.keydescriptor === 'oneOf') {
-                // Handle the case where errorMessage is an object
+            if (error.keyword === 'oneOf') {
                 if (typeof error.parentSchema.errorMessage === 'object') {
-                    message = error.parentSchema.errorMessage[error.keydescriptor] || JSON.stringify(error.parentSchema.errorMessage);
+                    message =
+                        error.parentSchema.errorMessage[error.keyword] ||
+                        JSON.stringify(error.parentSchema.errorMessage);
                 } else {
                     message = error.parentSchema.errorMessage;
                 }
@@ -321,15 +359,13 @@ function processValidationErrors(errors, ajvInstance, content) {
                 message = error.parentSchema.errorMessage;
             }
 
-            // Ensure message is a string
             message = typeof message === 'string' ? message : JSON.stringify(message);
             const position = getPositionFromDataPath(content, path);
-            // const position = {"line": 0, "column": 0};
             acc.push({
                 row: position.line,
                 column: position.column,
                 text: `${message} (${path})`,
-                type: "error"
+                type: 'error',
             });
         }
 
@@ -346,7 +382,7 @@ function getPositionFromDataPath(content, dataPath) {
         const pathSegments = dataPath
             .split('.')
             .filter(Boolean)
-            .flatMap(segment => {
+            .flatMap((segment) => {
                 const parts = [];
                 segment.replace(/([^[\]]+)|(\[\d+\])/g, (_, prop, index) => {
                     if (prop) parts.push(prop);
@@ -359,10 +395,7 @@ function getPositionFromDataPath(content, dataPath) {
 
         for (let segment of pathSegments) {
             if (currentNode.type === 'Object') {
-                // Find the property with the matching key
-                const property = currentNode.children.find(
-                    (prop) => prop.key.value === segment
-                );
+                const property = currentNode.children.find((prop) => prop.key.value === segment);
                 if (!property) {
                     return { line: 0, column: 0 };
                 }
@@ -382,8 +415,7 @@ function getPositionFromDataPath(content, dataPath) {
             return { line: 0, column: 0 };
         }
 
-        // Get the line and column from the current node's location data
-        const line = currentNode.loc.start.line - 1; // Zero-based index
+        const line = currentNode.loc.start.line - 1;
         const column = currentNode.loc.start.column - 1;
         return { line, column };
     } catch (e) {
@@ -393,8 +425,10 @@ function getPositionFromDataPath(content, dataPath) {
 
 function addInvalidWordAnnotations(errorData, content) {
     const invalidDescriptor = errorData['invalid-descriptor'];
-    const searchWord = '"#' + errorData['invalid-descriptor'] + '"';
+    const searchWord = '"#' + invalidDescriptor + '"';
     if (!invalidDescriptor) return;
+
+    customAnnotations = [];
 
     const lines = content.split('\n');
     const errorMessage = errorData['error-message'];
@@ -402,19 +436,210 @@ function addInvalidWordAnnotations(errorData, content) {
     lines.forEach((line, index) => {
         if (line.includes(searchWord)) {
             const column = line.indexOf(searchWord);
-            customAnnotations = [{
+            customAnnotations.push({
                 row: index,
                 column: column,
                 text: `${errorMessage} ("${invalidDescriptor}")`,
-                type: "error"
-            }];
+                type: 'error',
+            });
         }
     });
 }
 
-function debugLog(message) {
-    const debugElement = document.getElementById('debug');
-    // debugElement.style.display = 'block';
-    debugElement.textContent += `${new Date().toISOString()}: ${message}\n`;
-    debugElement.scrollTop = debugElement.scrollHeight;
+const hrefCompleter = {
+    getCompletions: function (editor, session, pos, prefix, callback) {
+        const cursorPosition = editor.getCursorPosition();
+        const line = editor.session.getLine(cursorPosition.row);
+
+        if (line[cursorPosition.column - 1] === '#' && line[cursorPosition.column - 2] === '"') {
+            const content = editor.getValue();
+            const suggestions = extractIdsFromContent(content);
+
+            callback(
+                null,
+                suggestions.map(function (word) {
+                    return {
+                        caption: word,
+                        value: word,
+                        meta: 'id',
+                    };
+                })
+            );
+        } else {
+            callback(null, []);
+        }
+    },
+};
+
+function extractIdsFromContent(content) {
+    let match;
+    const ids = [];
+    const jsonStyleRegex = /"id"\s*:\s*"([^"]+)"/g;
+    const xmlStyleRegex = /id=["']([^"']+)["']/g;
+    const regex = detectFileType(content) === 'JSON' ? jsonStyleRegex : xmlStyleRegex;
+
+    while ((match = regex.exec(content)) !== null) {
+        const id = match[1];
+        if (id) {
+            ids.push(id);
+        }
+    }
+
+    return ids;
 }
+
+function debugLog(message) {
+    const isDebugMode = false;
+    if (isDebugMode) {
+        const debugElement = document.getElementById('debug');
+        debugElement.textContent += `${new Date().toISOString()}: ${message}\n`;
+        debugElement.scrollTop = debugElement.scrollHeight;
+    }
+}
+
+function handleError(error, message) {
+    console.error(message, error);
+    debugLog(`${message}: ${error.message}`);
+}
+
+const DESCRIPTOR_TYPES = ['safe', 'unsafe', 'idempotent'];
+
+const alpsJsonCompleter = {
+    getCompletions: function (editor, session, pos, prefix, callback) {
+        const content = editor.getValue();
+        const ids = extractIdsFromContent(content);
+        const dynamicHrefOptions = ids.join(',');
+
+        const snippets = [
+            {
+                caption: 'Ontology',
+                snippet: `{"id":"\${1|${SEMANTIC_TERMS.join(',')}|}", "title": "\${2}"}`,
+                meta: 'id',
+            },
+            {
+                caption: 'Ontology',
+                snippet: `{"href": "#\${1|${dynamicHrefOptions}|}"}`,
+                meta: 'href',
+            },
+            {
+                caption: 'Taxonomy',
+                snippet: `{"id":"\${1|${SEMANTIC_TERMS.join(',')}|}", "title": "\${2}", "descriptor": [
+    {"href": "#\${3|${dynamicHrefOptions}|}"}
+]}`,
+            },
+            {
+                caption: 'Choreography',
+                snippet: `{"id":"\${1}", "title": "\${2}", "type": "\${3|${DESCRIPTOR_TYPES.join(
+                    ','
+                )}|}", "rt": "#\${4|${dynamicHrefOptions}|}"}`,
+                meta: 'no-parameter',
+            },
+            {
+                caption: 'Choreography',
+                snippet: `{"id":"\${1}", "title": "\${2}", "type": "\${3|${DESCRIPTOR_TYPES.join(
+                    ','
+                )}|}", "rt": "#\${4|${dynamicHrefOptions}|}", "descriptor": [
+    {"href": "#\${5|${dynamicHrefOptions}|}"}
+]}`,
+                meta: 'with-parameter',
+            },
+            {
+                caption: 'Skeleton',
+                snippet: `{
+    "$schema": "https://alps-io.github.io/schemas/alps.json",
+    "alps": {
+        "title": "\${1}",
+        "doc": {"value": "\${2}"},
+        "descriptor": [
+            \${3}
+        ]
+    }
+}`,
+                meta: 'JSON',
+            },
+        ];
+
+        const completions = snippets.map(function (snippet, index) {
+            return {
+                caption: snippet.caption,
+                snippet: snippet.snippet,
+                meta: snippet.meta,
+                type: 'snippet',
+                score: 1000 - index,
+            };
+        });
+        callback(null, completions);
+    },
+};
+
+const alpsXmlCompleter = {
+    getCompletions: function (editor, session, pos, prefix, callback) {
+        const content = editor.getValue();
+        const ids = extractIdsFromContent(content);
+        const dynamicHrefOptions = ids.join(',');
+
+        const snippets = [
+            {
+                caption: 'Ontology',
+                snippet: `<descriptor id="\${1|${SEMANTIC_TERMS.join(',')}|}" title="\${2}"/>`,
+                meta: 'id',
+            },
+            {
+                caption: 'Ontology',
+                snippet: `<descriptor href="#\${1|${dynamicHrefOptions}|}"/>`,
+                meta: 'href',
+            },
+            {
+                caption: 'Taxonomy',
+                snippet: `<descriptor id="\${1|${SEMANTIC_TERMS.join(
+                    ','
+                )}|}" title="\${2}">
+    <descriptor href="#\${3|${dynamicHrefOptions}|}"/>
+</descriptor>`,
+            },
+            {
+                caption: 'Choreography',
+                snippet: `<descriptor id="\${1|${SEMANTIC_TERMS.join(',')}|}" title="\${2}" type="\${3|${DESCRIPTOR_TYPES.join(
+                    ','
+                )}|}" rt="#\${4|${dynamicHrefOptions}|}"/>`,
+                meta: 'no-parameter',
+            },
+            {
+                caption: 'Choreography',
+                snippet: `<descriptor id="\${1|${SEMANTIC_TERMS.join(',')}|}" title="\${2}" type="\${3|${DESCRIPTOR_TYPES.join(
+                    ','
+                )}|}" rt="#\${4|${dynamicHrefOptions}|}">
+    <descriptor href="#\${5|${dynamicHrefOptions}|}"/>
+</descriptor>`,
+                meta: 'with-parameter',
+            },
+            {
+                caption: 'Skeleton',
+                snippet:
+                    '?xml version="1.0" encoding="UTF-8"?>\n' +
+                    '<alps\n' +
+                    '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
+                    '    xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">\n' +
+                    '    <title>${1}</title>\n' +
+                    '    <doc>${2}</doc>\n' +
+                    '    <!-- Ontology -->\n' +
+                    `    \${3}\n` +
+                    '    <!-- Taxonomy -->\n' +
+                    '    <!-- Choreography -->\n' +
+                    '</alps>',
+                meta: 'XML',
+            },
+        ];
+
+        const completions = snippets.map(function (snippet, index) {
+            return {
+                caption: snippet.caption,
+                snippet: snippet.snippet,
+                meta: snippet.meta,
+                type: 'snippet',
+                score: 1000 - index,
+            };
+        });
+        callback(null, completions);
+    },
+};

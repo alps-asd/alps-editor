@@ -64,13 +64,13 @@ try {
         [$errorMessage, $invalidDescriptor] = ["Descriptor not found", $eMessage];
     }
     echo json_encode(
-      [
-          'class' => (new ReflectionClass($e))->getShortName(),
-          'exception-message' => $e->getMessage(),
-          'error-message' => $errorMessage,
-          'invalid-descriptor' => $invalidDescriptor,
-          'line' => $line
-      ]
+        [
+            'class' => (new ReflectionClass($e))->getShortName(),
+            'exception-message' => $e->getMessage(),
+            'error-message' => $errorMessage,
+            'invalid-descriptor' => $invalidDescriptor,
+            'line' => $line
+        ]
     );
     exit(1);
 }

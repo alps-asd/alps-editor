@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "koriym/app-state-diagram": "dev-api"
+        "koriym/app-state-diagram": "dev-xsd"
     },
     "autoload": {
         "psr-4": {
