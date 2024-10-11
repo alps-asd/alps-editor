@@ -139,21 +139,40 @@
             "errorMessage": "The 'rel' must be a valid registered link relation type or a URI. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.12"
         },
         "link": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "href": { "$ref": "#/definitions/href" },
-                    "rel": { "$ref": "#/definitions/relType" }
+            "type": ["object", "array"],
+            "items": { "$ref": "#/definitions/linkObject" },
+            "oneOf": [
+                { "$ref": "#/definitions/linkObject" },
+                {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/linkObject" }
+                }
+            ],
+            "errorMessage": "The 'link' must be an object or an array of objects. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
+        },
+        "linkObject": {
+            "type": "object",
+            "required": ["href", "rel"],
+            "properties": {
+                "href": { "$ref": "#/definitions/href" },
+                "rel": { "$ref": "#/definitions/relType" },
+                "title": {
+                    "type": "string",
+                    "errorMessage": "If provided, 'title' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
                 },
-                "required": ["href"],
-                "errorMessage": {
-                    "required": {
-                        "href": "Each 'link' object must contain an 'href' property. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
-                    }
+                "tag": {
+                    "type": "string",
+                    "errorMessage": "If provided, 'tag' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
                 }
             },
-            "errorMessage": "The 'link' must be an array of objects. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
+            "additionalProperties": false,
+            "errorMessage": {
+                "required": {
+                    "href": "'href' is required",
+                    "rel": "'rel' is required"
+                },
+                "additionalProperties": "Additional properties are not allowed in 'link' object"
+            }
         },
         "descriptor": {
             "type": "object",
@@ -190,7 +209,7 @@
                 "rel": { "$ref": "#/definitions/relType" },
                 "tag": {
                     "type": "string",
-                    "errorMessage": "The 'tag' must be a strings. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.14"
+                    "errorMessage": "The 'tag' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.14"
                 },
                 "link": { "$ref": "#/definitions/link" },
                 "descriptor": {
