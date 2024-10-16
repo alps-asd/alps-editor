@@ -172,6 +172,7 @@ async function performApiValidationAndPreview(content, fileType) {
             debugLog('Preview updated');
             updateValidationMark(true);
             customAnnotations = [];
+            displayErrors([]); // Clear any previous errors
         } else {
             throw new Error(`Unexpected status code: ${response.status}`);
         }
@@ -191,6 +192,7 @@ async function performApiValidationAndPreview(content, fileType) {
                 },
             ];
         }
+        displayErrors(customAnnotations);
     }
 
     // Force re-rendering of annotations
@@ -234,6 +236,26 @@ function handleApiError(errorResponse) {
         ];
         debugLog('API returned an unknown error');
     }
+}
+
+function displayErrors(errors) {
+    const errorContainer = document.getElementById('error-container');
+
+    if (errors.length === 0) {
+        errorContainer.style.display = 'none';
+        return;
+    }
+
+    const errorHtml = `
+        <div class="error-title">Errors</div>
+        ${errors.map(error => `
+            <div class="error-message">${error.text}</div>
+            <div class="error-location">Line: ${error.row + 1}, Column: ${error.column + 1}</div>
+        `).join('')}
+    `;
+
+    errorContainer.innerHTML = errorHtml;
+    errorContainer.style.display = 'block';
 }
 
 function validateJson(content) {
