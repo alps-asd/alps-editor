@@ -124,15 +124,30 @@ async function validateAndPreview() {
     const fileType = detectFileType(content);
     document.getElementById('fileTypeDisplay').textContent = fileType;
 
-    const isLocallyValid = validateContent(content, fileType);
+    let validationResult;
+    if (fileType === 'JSON') {
+        editor.getSession().setMode('ace/mode/json');
+        validationResult = validateJson(content);
+        editor.completers = [alpsJsonCompleter];
+    } else if (fileType === 'XML') {
+        editor.getSession().setMode('ace/mode/xml');
+        validationResult = validateXml(content);
+        editor.completers = [alpsXmlCompleter];
+    } else {
+        validationResult = { isValid: false, errors: [{ row: 0, column: 0, text: 'Unknown file type', type: 'error' }] };
+    }
 
-    debugLog(`File type: ${fileType}, Local Validation: ${isLocallyValid ? 'Success' : 'Failure'}`);
+    debugLog(`File type: ${fileType}, Local Validation: ${validationResult.isValid ? 'Success' : 'Failure'}`);
 
-    if (isLocallyValid) {
+    if (validationResult.isValid) {
         await updatePreview(content, fileType);
     } else {
         updateValidationMark(false);
+        displayErrors(validationResult.errors);
     }
+
+    // Set editor annotations
+    editor.getSession().setAnnotations(validationResult.errors);
 }
 
 function validateContent(content, fileType) {
@@ -171,7 +186,6 @@ async function performApiValidationAndPreview(content, fileType) {
             document.getElementById('preview-frame').src = url;
             debugLog('Preview updated');
             updateValidationMark(true);
-            customAnnotations = [];
             displayErrors([]); // Clear any previous errors
         } else {
             throw new Error(`Unexpected status code: ${response.status}`);
@@ -181,22 +195,17 @@ async function performApiValidationAndPreview(content, fileType) {
         updateValidationMark(false);
 
         if (error.response) {
-            handleApiError(error.response);
+            const apiErrors = handleApiError(error.response);
+            displayErrors(apiErrors);
         } else {
-            customAnnotations = [
-                {
-                    row: 0,
-                    column: 0,
-                    text: 'API call failed: ' + error.message,
-                    type: 'error',
-                },
-            ];
+            displayErrors([{
+                row: 0,
+                column: 0,
+                text: 'API call failed: ' + error.message,
+                type: 'error'
+            }]);
         }
-        displayErrors(customAnnotations);
     }
-
-    // Force re-rendering of annotations
-    editor.getSession().setAnnotations(editor.getSession().getAnnotations());
 }
 
 function handleApiError(errorResponse) {
@@ -213,29 +222,53 @@ function handleApiError(errorResponse) {
 
     if (errorData && errorData['error-message']) {
         if (errorData['invalid-descriptor']) {
-            addInvalidWordAnnotations(errorData, editor.getValue());
+            return addInvalidWordAnnotations(errorData, editor.getValue());
         } else {
-            customAnnotations = [
-                {
-                    row: errorData['line'] ? errorData['line'] - 1 : 0,
-                    column: 0,
-                    text: `(${errorResponse.status}): ${errorData['error-message']}`,
-                    type: 'error',
-                },
-            ];
-            debugLog(`API Error: ${errorData['error-message']}`);
+            return [{
+                row: errorData['line'] ? errorData['line'] - 1 : 0,
+                column: 0,
+                text: `API Error (${errorResponse.status}): ${errorData['error-message']}`,
+                type: 'error'
+            }];
         }
     } else {
-        customAnnotations = [
-            {
-                row: 0,
-                column: 0,
-                text: `(${errorResponse.status}): ${errorData['class']}:${errorData['exception-message']}`,
-                type: 'error',
-            },
-        ];
-        debugLog('API returned an unknown error');
+        return [{
+            row: 0,
+            column: 0,
+            text: `API Error (${errorResponse.status}): ${errorData['class'] || ''}:${errorData['exception-message'] || 'Unknown error'}`,
+            type: 'error'
+        }];
     }
+}
+
+function addInvalidWordAnnotations(errorData, content) {
+    const invalidDescriptor = errorData['invalid-descriptor'];
+    const searchWord = '"#' + invalidDescriptor + '"';
+    const errors = [];
+
+    if (invalidDescriptor) {
+        const lines = content.split('\n');
+        const errorMessage = errorData['error-message'];
+
+        lines.forEach((line, index) => {
+            if (line.includes(searchWord)) {
+                const column = line.indexOf(searchWord);
+                errors.push({
+                    row: index,
+                    column: column,
+                    text: `API Error: ${errorMessage} ("${invalidDescriptor}")`,
+                    type: 'error'
+                });
+            }
+        });
+    }
+
+    return errors.length > 0 ? errors : [{
+        row: 0,
+        column: 0,
+        text: `API Error: ${errorData['error-message']}`,
+        type: 'error'
+    }];
 }
 
 function displayErrors(errors) {
@@ -259,62 +292,127 @@ function displayErrors(errors) {
 }
 
 function validateJson(content) {
-    let annotations = [];
+    let data;
     try {
-        const data = JSON.parse(content);
-        const validate = ajv.compile(alpsSchema);
-        const result = validate(data);
-        if (!result) {
-            console.log('AJV errors:', validate.errors);
-            debugLog('JSON schema validation failed');
-            annotations = processValidationErrors(validate.errors, ajv, content);
-        } else {
-            editor.session.clearAnnotations();
-        }
-        editor.session.setAnnotations(annotations);
-        return result;
+        // First, check if the JSON is syntactically valid
+        data = JSON.parse(content);
     } catch (error) {
-        debugLog('JSON parsing failed');
-        const position = getPositionFromParseError(error, content);
-        annotations.push({
-            row: position.line,
-            column: position.column,
-            text: error.message,
-            type: 'error',
-        });
-        editor.session.setAnnotations(annotations);
-        return false;
+        // JSON.parse() error provides position information
+        const position = getPositionFromJsonParseError(error, content);
+        return {
+            isValid: false,
+            errors: [{
+                row: position.line,
+                column: position.column,
+                text: `JSON Parse Error: ${error.message}`,
+                type: 'error'
+            }]
+        };
     }
+
+    // If JSON is syntactically valid, perform schema validation
+    const validate = ajv.compile(alpsSchema);
+    const result = validate(data);
+
+    if (!result) {
+        console.log('AJV errors:', validate.errors);
+        debugLog('JSON schema validation failed');
+        const errors = processAjvErrors(validate.errors, content);
+        return {
+            isValid: false,
+            errors: errors
+        };
+    }
+
+    // If we reach here, the JSON is valid both syntactically and according to the schema
+    return {
+        isValid: true,
+        errors: []
+    };
 }
 
-function getPositionFromParseError(error, content) {
-    const message = error.message;
-    const match = message.match(/at position (\d+)/);
-    if (match && match[1]) {
-        const position = Number(match[1]);
-        const lines = content.substring(0, position).split('\n');
-        const line = lines.length - 1;
-        const column = lines[lines.length - 1].length;
-        return { line, column };
-    } else {
-        return { line: 0, column: 0 };
+function getPositionFromJsonParseError(error, content) {
+    const match = error.message.match(/at position (\d+)/);
+    if (match) {
+        const position = parseInt(match[1]);
+        const lines = content.slice(0, position).split('\n');
+        return {
+            line: lines.length - 1,
+            column: lines[lines.length - 1].length
+        };
     }
+    return { line: 0, column: 0 };
+}
+
+function processAjvErrors(ajvErrors, content) {
+    return ajvErrors.map(error => {
+        const location = getLocationFromJsonPointer(error.dataPath, content);
+        return {
+            row: location.line,
+            column: location.column,
+            text: `Schema Error: ${error.message} at ${error.dataPath}`,
+            type: 'error'
+        };
+    });
+}
+
+function getLocationFromJsonPointer(jsonPointer, content) {
+    // This is a simplified version. A more robust implementation would use a JSON parser
+    // that preserves location information, like 'json-to-ast'
+    const path = jsonPointer.split('/').slice(1);
+    let currentObj = JSON.parse(content);
+    let currentString = content;
+    let line = 0;
+    let column = 0;
+
+    for (const key of path) {
+        const index = currentString.indexOf(`"${key}"`);
+        if (index !== -1) {
+            const beforeKey = currentString.slice(0, index);
+            const lines = beforeKey.split('\n');
+            line += lines.length - 1;
+            column = lines[lines.length - 1].length;
+            currentString = currentString.slice(index + key.length);
+            currentObj = currentObj[key];
+        } else {
+            // If we can't find the key, we return the start of the document
+            return { line: 0, column: 0 };
+        }
+    }
+
+    return { line, column };
 }
 
 function validateXml(content) {
-    try {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(content, 'text/xml');
-        const isValid = xmlDoc.getElementsByTagName('parsererror').length === 0;
-        if (!isValid) {
-            debugLog('Invalid XML form');
-        } else {
-            editor.session.clearAnnotations();
-        }
-        return isValid;
-    } catch (error) {
-        debugLog('XML validation failed');
-        return false;
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(content, 'text/xml');
+    const parseError = xmlDoc.getElementsByTagName('parsererror')[0];
+
+    if (parseError) {
+        const errorMessage = parseError.textContent || "Unknown XML parse error";
+        debugLog('Invalid XML form');
+
+        // Try to extract line and column information from the error message
+        const lineMatch = errorMessage.match(/line (\d+)/);
+        const columnMatch = errorMessage.match(/column (\d+)/);
+        const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0;  // Subtract 1 because editor lines are 0-indexed
+        const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0;  // Subtract 1 for 0-indexing
+
+        return {
+            isValid: false,
+            errors: [{
+                row: line,
+                column: column,
+                text: `XML Parse Error: ${errorMessage}`,
+                type: 'error'
+            }]
+        };
+    } else {
+        // Additional custom validation can be added here if needed
+        return {
+            isValid: true,
+            errors: []
+        };
     }
 }
 
@@ -443,29 +541,6 @@ function getPositionFromDataPath(content, dataPath) {
     } catch (e) {
         return { line: 0, column: 0 };
     }
-}
-
-function addInvalidWordAnnotations(errorData, content) {
-    const invalidDescriptor = errorData['invalid-descriptor'];
-    const searchWord = '"#' + invalidDescriptor + '"';
-    if (!invalidDescriptor) return;
-
-    customAnnotations = [];
-
-    const lines = content.split('\n');
-    const errorMessage = errorData['error-message'];
-
-    lines.forEach((line, index) => {
-        if (line.includes(searchWord)) {
-            const column = line.indexOf(searchWord);
-            customAnnotations.push({
-                row: index,
-                column: column,
-                text: `${errorMessage} ("${invalidDescriptor}")`,
-                type: 'error',
-            });
-        }
-    });
 }
 
 const hrefCompleter = {
