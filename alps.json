@@ -35,12 +35,8 @@
     "definitions": {
         "href": {
             "type": "string",
-            "oneOf": [
-                { "format": "uri" },
-                { "pattern": "^#" },
-                { "pattern": "^[^#\\s]+#?" }
-            ],
-            "errorMessage": "The 'href' must be a valid URI or match the specified patterns. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.8"
+            "format": "uri-reference",
+            "errorMessage": "The 'href' must be a valid URI or URI reference. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.8"
         },
         "doc": {
             "oneOf": [
@@ -95,52 +91,31 @@
             },
             "errorMessage": "The 'ext' must be an array of objects. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.6"
         },
-        "relEnum": {
-            "enum": [
-                "about", "acl", "alternate", "amphtml", "appendix",
-                "apple-touch-icon", "apple-touch-startup-image", "archives",
-                "author", "blocked-by", "bookmark", "c2pa-manifest",
-                "canonical", "chapter", "cite-as", "collection",
-                "compression-dictionary", "contents", "convertedfrom",
-                "copyright", "create-form", "current", "describedby",
-                "describes", "disclosure", "dns-prefetch", "duplicate",
-                "edit", "edit-form", "edit-media", "enclosure", "external",
-                "first", "glossary", "help", "hosts", "hub", "ice-server",
-                "icon", "index", "intervalafter", "intervalbefore",
-                "intervalcontains", "intervaldisjoint", "intervalduring",
-                "intervalequals", "intervalfinishedby", "intervalfinishes",
-                "intervalin", "intervalmeets", "intervalmetby",
-                "intervaloverlappedby", "intervaloverlaps", "intervalstartedby",
-                "intervalstarts", "item", "last", "latest-version", "license",
-                "linkset", "lrdd", "manifest", "mask-icon", "me",
-                "media-feed", "memento", "micropub", "modulepreload",
-                "monitor", "monitor-group", "next", "next-archive", "nofollow",
-                "noopener", "noreferrer", "opener", "openid2.local_id",
-                "openid2.provider", "original", "p3pv1", "payment",
-                "pingback", "preconnect", "predecessor-version", "prefetch",
-                "preload", "prerender", "prev", "prev-archive", "preview",
-                "previous", "privacy-policy", "profile", "publication",
-                "related", "replies", "restconf", "ruleinput", "search",
-                "section", "self", "service", "service-desc", "service-doc",
-                "service-meta", "sip-trunking-capability", "sponsored",
-                "start", "status", "stylesheet", "subsection",
-                "successor-version", "sunset", "tag", "terms-of-service",
-                "timegate", "timemap", "type", "ugc", "up", "version-history",
-                "via", "webmention", "working-copy", "working-copy-of"
-            ],
-            "errorMessage": "The 'rel' value is not a valid link relation type. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.12"
-        },
         "relType": {
-            "type": "string",
             "oneOf": [
-                { "$ref": "#/definitions/relEnum" },
-                { "format": "uri" }
+                {
+                    "type": "string",
+                    "enum": [
+                        "about", "alternate", "appendix", "archives", "author",
+                        "bookmark", "canonical", "chapter", "collection", "contents",
+                        "copyright", "current", "describedby", "describes", "edit",
+                        "edit-media", "enclosure", "first", "glossary", "help", "hub",
+                        "icon", "index", "item", "last", "latest-version", "license",
+                        "next", "next-archive", "payment", "prev", "preview",
+                        "previous", "privacy-policy", "related", "replies", "section",
+                        "self", "service", "start", "stylesheet", "subsection",
+                        "tag", "terms-of-service", "type", "up", "version-history",
+                        "via", "working-copy", "working-copy-of"
+                    ]
+                },
+                {
+                    "type": "string",
+                    "format": "uri"
+                }
             ],
             "errorMessage": "The 'rel' must be a valid registered link relation type or a URI. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.12"
         },
         "link": {
-            "type": ["object", "array"],
-            "items": { "$ref": "#/definitions/linkObject" },
             "oneOf": [
                 { "$ref": "#/definitions/linkObject" },
                 {
@@ -162,16 +137,16 @@
                 },
                 "tag": {
                     "type": "string",
-                    "errorMessage": "If provided, 'tag' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
+                    "errorMessage": "If provided, 'tag' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.14"
                 }
             },
             "additionalProperties": false,
             "errorMessage": {
                 "required": {
-                    "href": "'href' is required",
-                    "rel": "'rel' is required"
+                    "href": "'href' is required in 'link' object. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10",
+                    "rel": "'rel' is required in 'link' object. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
                 },
-                "additionalProperties": "Additional properties are not allowed in 'link' object"
+                "additionalProperties": "Additional properties are not allowed in 'link' object. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.10"
             }
         },
         "descriptor": {
@@ -199,12 +174,12 @@
                 },
                 "rt": {
                     "type": "string",
-                    "pattern": "#[a-zA-Z0-9._-]+$",
-                    "errorMessage": "The 'rt' of 'descriptor' must be a string starting with '#' or a resolvable URL with a fragment identifier. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.13"
+                    "errorMessage": "The 'rt' of 'descriptor' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.13"
                 },
                 "def": {
                     "type": "string",
-                    "errorMessage": "The 'def' of 'descriptor' must be a string. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.3"
+                    "format": "uri-reference",
+                    "errorMessage": "The 'def' of 'descriptor' must be a valid URI. See https://datatracker.ietf.org/doc/html/draft-amundsen-richardson-foster-alps-07#section-2.2.3"
                 },
                 "rel": { "$ref": "#/definitions/relType" },
                 "tag": {
