@@ -9,7 +9,7 @@ if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
 }
 
 $script = match ($_SERVER["REQUEST_METHOD"]) {
-    'GET'=> __DIR__. '/htdocs/index.html',
+    'GET'=> __DIR__. '/index.html',
     'POST'=> __DIR__. '/api/index.php',
 };
 
