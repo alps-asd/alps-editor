@@ -87,7 +87,21 @@ class AlpsEditor {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const content = e.target.result;
+                    let content = e.target.result;
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+                    if (fileExtension === 'html') {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(content, 'text/html');
+                        const codeElement = doc.querySelector('code');
+                        if (codeElement) {
+                            content = this.unescapeHtml(codeElement.textContent);
+                        } else {
+                            console.warn('No <code> element found in HTML file');
+                            return;
+                        }
+                    }
+
                     this.editor.setValue(content);
                     console.log('Dropped:', file.name);
                     this.validateAndPreview();
@@ -95,6 +109,12 @@ class AlpsEditor {
                 reader.readAsText(file);
             }
         });
+    }
+
+    unescapeHtml(html) {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
     }
 
     setupCompleteHref() {
