@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- You can also open files by dropping ALPS files here.-->
+<!--
+Welcome to Alps Editor! Let's make API design fun and effective.
+
+Quick tips:
+- Press Ctrl + Space to show snippets for auto-completion (suggested terms are from Schema.org)
+- To start from scratch, delete all content and press Ctrl + Space, then select "Skeleton"
+  (For JSON format, type "{" first)
+- Drag and drop an ALPS file (JSON, XML, or HTML) into the editor to open it
+  (For HTML files, the content within <code> tags will be extracted)
+- Hit Ctrl + S to download your work anytime
+
+ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
+
+Learn more about ALPS:
+- Official ALPS website: http://alps.io/
+- ALPS-ASD page: https://alps-asd.github.io/
+
+Happy modeling! Remember, solid semantics supports the long-term evolution of your APIs. :)
+-->
 <alps
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
