@@ -7,7 +7,7 @@ Quick tips:
 - To start from scratch, delete all content and press Ctrl + Space, then select "Skeleton"
   (For JSON format, type "{" first)
 - Drag and drop an ALPS file (JSON, XML, or HTML) into the editor to open it
-  (For HTML files, the content within <code> tags will be extracted)
+  (For HTML files, the ALPS profile contained within will be extracted)
 - Hit Ctrl + S to download your work anytime
 
 ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
