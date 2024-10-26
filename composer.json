@@ -9,6 +9,7 @@
         }
     ],
     "require": {
+        "php": "^8.0",
         "koriym/app-state-diagram": "dev-xsd"
     },
     "autoload": {
