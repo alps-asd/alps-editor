@@ -8,6 +8,39 @@ class AlpsEditor {
         this.ajv = new Ajv({ allErrors: true, verbose: true });
         this.customAnnotations = [];
         this.isDebugMode = false;
+        this.SKELETON_SNIPPETS = [
+            {
+                caption: 'Skeleton',
+                snippet: `<?xml version="1.0" encoding="UTF-8"?>
+<alps version="1.0">
+    <title>\${1:Profile Title}</title>
+    <doc>\${2:}</doc>
+    \${3}
+</alps>`,
+                meta: 'XML',
+                type: 'snippet',
+                score: 1000
+            },
+            {
+                caption: 'Skeleton',
+                snippet: `{
+    "$schema": "https://alps-io.github.io/schemas/alps.json",
+    "alps": {
+        "version": "1.0",
+        "title": "\${1:Profile Title}",
+        "doc": {
+            "value": "\${2:}"
+        },
+        "descriptor": [
+            \${3}
+        ]
+    }
+}`,
+                meta: 'JSON',
+                type: 'snippet',
+                score: 999
+            }
+        ];
         this.init();
     }
 
@@ -444,6 +477,12 @@ class AlpsEditor {
         return {
             getCompletions: (editor, session, pos, prefix, callback) => {
                 const content = editor.getValue();
+                if (!content) {
+                    callback(null, [...this.SKELETON_SNIPPETS].sort((a, b) => {
+                        return a.meta === 'JSON Skeleton' ? -1 : 1;
+                    }));
+                    return;
+                }
                 const ids = this.extractIdsFromContent(content);
                 const dynamicHrefOptions = ids.join(',');
 
@@ -480,20 +519,6 @@ class AlpsEditor {
 ]}`,
                         meta: 'with-parameter',
                     },
-                    {
-                        caption: 'Skeleton',
-                        snippet: `{
-    "$schema": "https://alps-io.github.io/schemas/alps.json",
-    "alps": {
-        "title": "\${1}",
-        "doc": {"value": "\${2}"},
-        "descriptor": [
-            \${3}
-        ]
-    }
-}`,
-                        meta: 'JSON',
-                    },
                 ];
 
                 const completions = snippets.map((snippet, index) => ({
@@ -513,8 +538,15 @@ class AlpsEditor {
         return {
             getCompletions: (editor, session, pos, prefix, callback) => {
                 const content = editor.getValue();
+                if (!content) {
+                    callback(null, [...this.SKELETON_SNIPPETS].sort((a, b) => {
+                        return a.meta === 'XML Skeleton' ? -1 : 1;
+                    }));
+                    return;
+                }
                 const ids = this.extractIdsFromContent(content);
                 const dynamicHrefOptions = ids.join(',');
+
 
                 const snippets = [
                     {
@@ -550,22 +582,6 @@ class AlpsEditor {
     <descriptor href="#\${5|${dynamicHrefOptions}|}"/>
 </descriptor>`,
                         meta: 'with-parameter',
-                    },
-                    {
-                        caption: 'Skeleton',
-                        snippet:
-                            '<?xml version="1.0" encoding="UTF-8"?>\n' +
-                            '<alps\n' +
-                            '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-                            '    xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">\n' +
-                            '    <title>${1}</title>\n' +
-                            '    <doc>${2}</doc>\n' +
-                            '    <!-- Ontology -->\n' +
-                            `    \${3}\n` +
-                            '    <!-- Taxonomy -->\n' +
-                            '    <!-- Choreography -->\n' +
-                            '</alps>',
-                        meta: 'XML',
                     },
                 ];
 
