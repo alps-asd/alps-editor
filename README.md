@@ -1,7 +1,7 @@
 # ALPS Online Editor
 
 
-<img src="https://www.app-state-diagram.com/images/home.png" width=100px">
+<img src="https://www.app-state-diagram.com/images/home.png" width=100px>
 
 ALPS Online Editor is a web-based editor for creating and editing Application-Level Profile Semantics (ALPS) documents. It supports both XML and JSON formats with real-time validation, auto-completion, and live preview features.
 
@@ -108,7 +108,6 @@ The editor performs two types of validation:
 
 Error indicators:
 - ❌ Red squiggly underline: Syntax error
-- 🔍 Yellow squiggly underline: Warning or suggestion
 - ✅ Green checkmark: Valid ALPS document
 
 ## References
