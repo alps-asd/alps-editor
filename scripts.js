@@ -10,9 +10,11 @@ class AlpsEditor {
         this.isDebugMode = false;
         this.SKELETON_SNIPPETS = [
             {
-                caption: 'Skeleton',
+                caption: 'ALPS XML Skeleton',
                 snippet: `<?xml version="1.0" encoding="UTF-8"?>
-<alps version="1.0">
+<alps version="1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
     <title>\${1:Profile Title}</title>
     <doc>\${2:}</doc>
     \${3}
@@ -22,7 +24,7 @@ class AlpsEditor {
                 score: 1000
             },
             {
-                caption: 'Skeleton',
+                caption: 'ALPS JSON Skeleton',
                 snippet: `{
     "$schema": "https://alps-io.github.io/schemas/alps.json",
     "alps": {
