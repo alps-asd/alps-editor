@@ -122,8 +122,8 @@ class Alps2DotAdapter extends DiagramAdapter {
             // 2. Load Graphviz WASM if needed
             await this.ensureGraphvizLoaded();
             
-            // 3. Generate SVG directly
-            const svg = await window.Graphviz.layout(dotContent, 'svg', 'dot');
+            // 3. Generate SVG using d3-graphviz
+            const svg = await this.generateSvgFromDot(dotContent);
             
             // 4. Return as data URL
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -134,27 +134,82 @@ class Alps2DotAdapter extends DiagramAdapter {
     }
     
     async ensureGraphvizLoaded() {
-        if (window.Graphviz) return;
+        if (window.d3 && window.d3.graphviz) return;
         
-        // Load Graphviz WASM library
-        await new Promise((resolve, reject) => {
+        try {
+            // Load d3 first if not available
+            if (!window.d3) {
+                await this.loadScript('https://d3js.org/d3.v7.min.js');
+            }
+            
+            // Load d3-graphviz
+            await this.loadScript('https://unpkg.com/d3-graphviz@5.6.0/build/d3-graphviz.js');
+            
+            // Wait for d3.graphviz to be available
+            let attempts = 0;
+            while ((!window.d3 || !window.d3.graphviz) && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.d3 || !window.d3.graphviz) {
+                throw new Error('d3-graphviz not available after loading');
+            }
+            
+        } catch (error) {
+            throw new Error(`Failed to load Graphviz dependencies: ${error.message}`);
+        }
+    }
+    
+    async loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Check if script is already loaded
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            
             const script = document.createElement('script');
-            script.src = 'https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js';
+            script.src = src;
             script.onload = resolve;
-            script.onerror = reject;
+            script.onerror = () => reject(new Error(`Failed to load ${src}`));
             document.head.appendChild(script);
         });
-        
-        // Wait for Graphviz to initialize
-        let attempts = 0;
-        while (!window.Graphviz && attempts < 30) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        if (!window.Graphviz) {
-            throw new Error('Failed to load Graphviz WASM');
-        }
+    }
+    
+    async generateSvgFromDot(dotContent) {
+        return new Promise((resolve, reject) => {
+            // Create a temporary container for d3-graphviz
+            const tempContainer = document.createElement('div');
+            tempContainer.style.display = 'none';
+            document.body.appendChild(tempContainer);
+            
+            try {
+                // Use d3-graphviz to render SVG
+                window.d3.select(tempContainer)
+                    .graphviz()
+                    .renderDot(dotContent)
+                    .on('end', () => {
+                        try {
+                            const svgElement = tempContainer.querySelector('svg');
+                            if (svgElement) {
+                                const svgString = new XMLSerializer().serializeToString(svgElement);
+                                document.body.removeChild(tempContainer);
+                                resolve(svgString);
+                            } else {
+                                document.body.removeChild(tempContainer);
+                                reject(new Error('No SVG element generated'));
+                            }
+                        } catch (error) {
+                            document.body.removeChild(tempContainer);
+                            reject(error);
+                        }
+                    });
+            } catch (error) {
+                document.body.removeChild(tempContainer);
+                reject(error);
+            }
+        });
     }
 
     convertAlpsToDot(content, fileType) {

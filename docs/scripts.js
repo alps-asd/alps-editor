@@ -1,4 +1,4 @@
-いやimport { SEMANTIC_TERMS } from './semanticTerms.js';
+import { SEMANTIC_TERMS } from './semanticTerms.js';
 import { DiagramAdapterManager } from './diagramAdapters.js';
 
 class AlpsEditor {
@@ -213,7 +213,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                     }
                 };
             } else {
-                const schemaResponse = await axios.get('/alps.json');
+                const schemaResponse = await axios.get('./alps.json');
                 this.alpsSchema = schemaResponse.data;
             }
         } catch (error) {
@@ -580,6 +580,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 this.debugLog('ALPS profile downloaded');
+                this.updateValidationMark(true);
                 return;
             }
 
