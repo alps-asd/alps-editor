@@ -77,8 +77,8 @@ class AlpsEditor {
         try {
             let defaultXml;
             
-            // Load from external file for both local and server modes
-            const response = await fetch('/default-alps.xml');
+            // Load from external file (relative path)
+            const response = await fetch('default-alps.xml');
             defaultXml = await response.text();
             
             this.editor.setValue(defaultXml);
