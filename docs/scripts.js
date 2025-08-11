@@ -78,8 +78,8 @@ class AlpsEditor {
         try {
             let defaultXml;
             
-            // Load from external file (works for both local server and GitHub Pages)
-            const response = await fetch('/default-alps.xml');
+            // Load from external file - use relative path to reach repository root
+            const response = await fetch('../default-alps.xml');
             defaultXml = await response.text();
             
             this.editor.setValue(defaultXml);
