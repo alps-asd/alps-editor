@@ -134,157 +134,41 @@ class Alps2DotAdapter extends DiagramAdapter {
             const dotContent = this.convertAlpsToDot(content, fileType);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
 
-            // Try rendering in the parent context first using Viz.js for stable Graphviz rendering
-            const ensureVizjsInParent = () => new Promise((resolve) => {
-                if (window.Viz) {
-                    resolve(true);
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/@aduh95/viz.js@3.2.4/lib/viz.js';
-                script.onload = () => resolve(true);
-                script.onerror = () => resolve(false);
-                document.head.appendChild(script);
-            });
-
-            try {
-                const ok = await ensureVizjsInParent();
-                if (ok && window.Viz) {
-                    console.log('Parent context: Successfully loaded Viz.js, generating SVG...');
-                    const viz = new window.Viz();
-                    const svg = await viz.renderSVGElement(dotContent);
-                    console.log('Parent context: SVG generated successfully');
-                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
-<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
-</head><body><div class="container">${svg.outerHTML}</div></body></html>`;
-                    const blob = new Blob([html], { type: 'text/html' });
-                    return URL.createObjectURL(blob);
-                }
-            } catch (e) {
-                console.warn('Parent-context Viz.js render failed; falling back to iframe approach.', e);
+            // Wait for Viz.js to be available in main page context
+            console.log('Checking Viz.js availability...');
+            let viz = window.Viz;
+            for (let i = 0; i < 50 && (!viz || typeof viz !== 'function'); i++) {
+                await new Promise(r => setTimeout(r, 100));
+                viz = window.Viz;
+                console.log(`Attempt ${i + 1}: Viz available = ${typeof viz}`);
             }
 
-            // Fallback: render inside iframe HTML using Viz.js
-            const dotJson = JSON.stringify(dotContent);
-            const html = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>ALPS Diagram (Viz.js)</title>
-                        <script src="https://unpkg.com/@aduh95/viz.js@3.2.4/lib/viz.js"></script>
-                        <style>
-                            body { 
-                                margin: 0; 
-                                padding: 20px; 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                background: #f8f9fa;
-                            }
-                            .container {
-                                background: white;
-                                border-radius: 8px;
-                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                                padding: 20px;
-                                min-height: 400px;
-                            }
-                            .info {
-                                position: fixed;
-                                top: 10px;
-                                right: 10px;
-                                background: rgba(52, 152, 219, 0.9);
-                                color: white;
-                                padding: 8px 12px;
-                                border-radius: 4px;
-                                font-size: 12px;
-                                font-weight: 500;
-                                z-index: 1000;
-                            }
-                            .loading {
-                                color: #666;
-                                text-align: center;
-                                padding: 40px 20px;
-                            }
-                            #graphviz-output {
-                                text-align: center;
-                                margin-top: 20px;
-                            }
-                            #graphviz-output svg {
-                                max-width: 100%;
-                                height: auto;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div id="graphviz-output">
-                                <div class="loading">Loading Graphviz WASM...</div>
-                            </div>
-                        </div>
-                        
-                        <script>
-                            // Auto-render when page loads
-                            document.addEventListener('DOMContentLoaded', function() {
-                                tryVizjsRender();
-                            });
+            if (viz && typeof viz === 'function') {
+                console.log('Main page: Using pre-loaded Viz.js to generate SVG...');
+                try {
+                    const vizInstance = new viz();
+                    const svg = await vizInstance.renderSVGElement(dotContent);
+                    console.log('Main page: SVG generated successfully');
+                    
+                    // Convert SVG element to string
+                    const svgString = svg.outerHTML;
+                    
+                    // Return the SVG directly as data URL for iframe-less display
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
+</head><body><div class="container">${svgString}</div></body></html>`;
+                    const blob = new Blob([html], { type: 'text/html' });
+                    return URL.createObjectURL(blob);
+                } catch (vizError) {
+                    console.error('Viz.js rendering error:', vizError);
+                    throw new Error(`Viz.js rendering failed: ${vizError.message}`);
+                }
+            }
 
-                            // Also try immediately if DOM is already loaded
-                            if (document.readyState !== 'loading') {
-                                tryVizjsRender();
-                            }
-                            
-                            function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-                            async function tryVizjsRender() {
-                                const outputDiv = document.getElementById('graphviz-output');
-                                if (!outputDiv) {
-                                    setTimeout(tryVizjsRender, 100);
-                                    return;
-                                }
-                                
-                                try {
-                                    // DOT content to render
-                                    const dot = ${dotJson};
-                                    
-                                    // Wait for Viz.js to be available (up to 10 seconds)
-                                    let viz = null;
-                                    for (let i = 0; i < 100; i++) {
-                                        if (window.Viz) {
-                                            try {
-                                                viz = new window.Viz();
-                                                break;
-                                            } catch (e) {
-                                                // Viz constructor might not be ready yet
-                                            }
-                                        }
-                                        await new Promise(r => setTimeout(r, 100));
-                                    }
-
-                                    if (viz) {
-                                        // Render using Viz.js
-                                        const svgElement = await viz.renderSVGElement(dot);
-                                        outputDiv.innerHTML = '';
-                                        outputDiv.appendChild(svgElement);
-                                    } else {
-                                        throw new Error('Failed to load Viz.js after 10 seconds');
-                                    }
-                                    
-                                } catch (error) {
-                                    console.error('Viz.js rendering error:', error);
-                                    outputDiv.innerHTML = \`
-                                        <div style=\"color: #dc3545; padding: 20px; text-align: left;\">
-                                            <strong>Diagram rendering failed:</strong><br>
-                                            \${error.message}<br><br>
-                                            <details>
-                                                <summary>View DOT source</summary>
-                                                <pre style=\"background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;\">\${escapeHtml(dot)}</pre>
-                                            </details>
-                                        </div>
-                                    \`;
-                                }
-                            }
-                        </script>
-                    </body>
-                    </html>
-                `;
-
+            // Fallback: show error message
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram - Error</title>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;} .error{color:#dc3545;}</style>
+</head><body><div class="container"><div class="error"><strong>Diagram generation failed:</strong><br>Viz.js library not available after 5 seconds. Check network connection and try refreshing the page.</div></div></body></html>`;
             const blob = new Blob([html], { type: 'text/html' });
             return URL.createObjectURL(blob);
         } catch (error) {

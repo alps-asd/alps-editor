@@ -2,8 +2,7 @@
 <html>
 <head>
     <title>Viz.js Test</title>
-    <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
-    <script src="https://unpkg.com/viz.js@2.1.2/lite.render.js"></script>
+    <script src="https://unpkg.com/@aduh95/viz.js@3.2.4/lib/viz-standalone.js"></script>
 </head>
 <body>
     <h1>Viz.js Test</h1>
@@ -33,9 +32,9 @@
             try {
                 if (window.Viz) {
                     const viz = new window.Viz();
-                    const svg = await viz.renderString(dot, { format: 'svg' });
-                    document.getElementById('output').innerHTML = svg;
-                    console.log('Success: SVG generated with viz.js@2.1.2');
+                    const svg = await viz.renderSVGElement(dot);
+                    document.getElementById('output').appendChild(svg);
+                    console.log('Success: SVG generated with @aduh95/viz.js');
                 } else {
                     throw new Error('Viz.js not available');
                 }
