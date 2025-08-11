@@ -82,6 +82,9 @@ class AsdAdapter extends DiagramAdapter {
                 });
                 </script>`;
                 
+                // Fix HTML structure issues before insertion
+                responseText = this.fixHtmlStructure(responseText);
+                
                 // Insert the code before the closing </head> tag
                 if (responseText.includes('</head>')) {
                     responseText = responseText.replace('</head>', initializationCode + '\n</head>');
@@ -94,7 +97,7 @@ class AsdAdapter extends DiagramAdapter {
                     }
                 }
 
-                const blob = new Blob([responseText], { type: 'text/html' });
+                const blob = new Blob([responseText], { type: 'text/html; charset=utf-8' });
                 return URL.createObjectURL(blob);
             } else {
                 throw new Error(`ASD generation failed with status: ${response.status}`);
@@ -102,6 +105,19 @@ class AsdAdapter extends DiagramAdapter {
         } catch (error) {
             throw new Error(`ASD generation failed: ${error.message}`);
         }
+    }
+    
+    fixHtmlStructure(html) {
+        // Fix common HTML structure issues that cause XML parsing errors
+        return html
+            // Fix self-closing tags
+            .replace(/<link([^>]*?)(?<!\/)>/g, '<link$1/>')
+            .replace(/<meta([^>]*?)(?<!\/)>/g, '<meta$1/>')
+            .replace(/<br(?<!\/)>/g, '<br/>')
+            .replace(/<hr(?<!\/)>/g, '<hr/>')
+            .replace(/<img([^>]*?)(?<!\/)>/g, '<img$1/>')
+            // Ensure proper DOCTYPE
+            .replace(/^\s*/, '<!DOCTYPE html>\n');
     }
 }
 
