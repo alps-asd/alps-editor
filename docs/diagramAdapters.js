@@ -134,48 +134,44 @@ class Alps2DotAdapter extends DiagramAdapter {
             const dotContent = this.convertAlpsToDot(content, fileType);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
 
-            // Try rendering in the parent context first using @hpcc-js/wasm to avoid iframe dependency timing
-            const ensureHpccInParent = () => new Promise((resolve) => {
-                if (window["@hpcc-js/wasm"]) {
+            // Try rendering in the parent context first using Viz.js for stable Graphviz rendering
+            const ensureVizjsInParent = () => new Promise((resolve) => {
+                if (window.Viz) {
                     resolve(true);
                     return;
                 }
                 const script = document.createElement('script');
-                script.src = 'https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js';
+                script.src = 'https://unpkg.com/@aduh95/viz.js@3.2.4/lib/viz.js';
                 script.onload = () => resolve(true);
                 script.onerror = () => resolve(false);
                 document.head.appendChild(script);
             });
 
             try {
-                const ok = await ensureHpccInParent();
-                let wasm = window["@hpcc-js/wasm"];
-                for (let i = 0; i < 50 && (!wasm || !wasm.graphviz || typeof wasm.graphviz.layout !== 'function'); i++) {
-                    await new Promise(r => setTimeout(r, 100));
-                    wasm = window["@hpcc-js/wasm"];
-                }
-                if (ok && wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function') {
-                    const svg = await wasm.graphviz.layout(dotContent, 'svg', 'dot');
+                const ok = await ensureVizjsInParent();
+                if (ok && window.Viz) {
+                    console.log('Parent context: Successfully loaded Viz.js, generating SVG...');
+                    const viz = new window.Viz();
+                    const svg = await viz.renderSVGElement(dotContent);
+                    console.log('Parent context: SVG generated successfully');
                     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
 <style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
-</head><body><div class="container">${svg}</div></body></html>`;
+</head><body><div class="container">${svg.outerHTML}</div></body></html>`;
                     const blob = new Blob([html], { type: 'text/html' });
                     return URL.createObjectURL(blob);
                 }
             } catch (e) {
-                console.warn('Parent-context Graphviz render failed; falling back to iframe loader.', e);
+                console.warn('Parent-context Viz.js render failed; falling back to iframe approach.', e);
             }
 
-            // Fallback: render inside iframe HTML (kept for environments where parent loading is blocked)
+            // Fallback: render inside iframe HTML using Viz.js
             const dotJson = JSON.stringify(dotContent);
             const html = `
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>ALPS Diagram (alps2dot + Graphviz)</title>
-                        <script src="https://d3js.org/d3.v7.min.js"></script>
-                        <script src="https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js"></script>
-                        <script src="https://unpkg.com/d3-graphviz@5.6.0/build/d3-graphviz.min.js"></script>
+                        <title>ALPS Diagram (Viz.js)</title>
+                        <script src="https://unpkg.com/@aduh95/viz.js@3.2.4/lib/viz.js"></script>
                         <style>
                             body { 
                                 margin: 0; 
@@ -227,64 +223,51 @@ class Alps2DotAdapter extends DiagramAdapter {
                         <script>
                             // Auto-render when page loads
                             document.addEventListener('DOMContentLoaded', function() {
-                                tryGraphvizRender();
+                                tryVizjsRender();
                             });
 
                             // Also try immediately if DOM is already loaded
                             if (document.readyState !== 'loading') {
-                                tryGraphvizRender();
+                                tryVizjsRender();
                             }
                             
                             function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-                            async function tryGraphvizRender() {
+                            async function tryVizjsRender() {
                                 const outputDiv = document.getElementById('graphviz-output');
                                 if (!outputDiv) {
-                                    setTimeout(tryGraphvizRender, 100);
+                                    setTimeout(tryVizjsRender, 100);
                                     return;
                                 }
                                 
                                 try {
-                                    // Create a div for d3-graphviz
-                                    outputDiv.innerHTML = '<div id="graph"></div>';
-                                    
-                                    // Wait a moment for libraries to be ready
-                                    await new Promise(resolve => setTimeout(resolve, 100));
-                                    
-                                    // Use d3-graphviz like ASD does
+                                    // DOT content to render
                                     const dot = ${dotJson};
                                     
-                                    // Wait up to ~5 seconds for dependencies to be present
-                                    const awaitDeps = async () => {
-                                        for (let i = 0; i < 50; i++) {
-                                            const hasD3 = typeof window.d3 !== 'undefined';
-                                            const hasD3Graphviz = hasD3 && typeof window.d3.graphviz === 'function';
-                                            const wasm = window["@hpcc-js/wasm"]; 
-                                            const hasHpcc = wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function';
-                                            if (hasD3Graphviz || hasHpcc) {
-                                                return { hasD3Graphviz, hasHpcc };
+                                    // Wait for Viz.js to be available (up to 10 seconds)
+                                    let viz = null;
+                                    for (let i = 0; i < 100; i++) {
+                                        if (window.Viz) {
+                                            try {
+                                                viz = new window.Viz();
+                                                break;
+                                            } catch (e) {
+                                                // Viz constructor might not be ready yet
                                             }
-                                            await new Promise(r => setTimeout(r, 100));
                                         }
-                                        return { hasD3Graphviz: false, hasHpcc: false };
-                                    };
+                                        await new Promise(r => setTimeout(r, 100));
+                                    }
 
-                                    const { hasD3Graphviz, hasHpcc } = await awaitDeps();
-
-                                    if (hasD3Graphviz) {
-                                        // Render using d3-graphviz (same approach as ASD)
-                                        d3.select("#graph")
-                                            .graphviz()
-                                            .renderDot(dot);
-                                    } else if (hasHpcc) {
-                                        // Fallback: render directly with hpcc wasm graphviz
-                                        const svg = await window["@hpcc-js/wasm"].graphviz.layout(dot, "svg", "dot");
-                                        outputDiv.innerHTML = svg;
+                                    if (viz) {
+                                        // Render using Viz.js
+                                        const svgElement = await viz.renderSVGElement(dot);
+                                        outputDiv.innerHTML = '';
+                                        outputDiv.appendChild(svgElement);
                                     } else {
-                                        throw new Error('Failed to load Graphviz dependencies: d3-graphviz not available after loading');
+                                        throw new Error('Failed to load Viz.js after 10 seconds');
                                     }
                                     
                                 } catch (error) {
-                                    console.error('Graphviz rendering error:', error);
+                                    console.error('Viz.js rendering error:', error);
                                     outputDiv.innerHTML = \`
                                         <div style=\"color: #dc3545; padding: 20px; text-align: left;\">
                                             <strong>Diagram rendering failed:</strong><br>
