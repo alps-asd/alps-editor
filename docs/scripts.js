@@ -1,4 +1,4 @@
-いやimport { SEMANTIC_TERMS } from './semanticTerms.js';
+import { SEMANTIC_TERMS } from './semanticTerms.js';
 import { DiagramAdapterManager } from './diagramAdapters.js';
 
 class AlpsEditor {
@@ -12,6 +12,10 @@ class AlpsEditor {
         this.adapterManager = new DiagramAdapterManager();
         this.isLocalMode = window.location.protocol === 'file:'; // ローカルファイルで開いているかチェック
         this.isStaticMode = window.location.pathname.includes('/docs/') || window.location.hostname.includes('github.io'); // Static hosting check
+        // Ensure static/local environments use client-side diagramming before first preview
+        if (this.isLocalMode || this.isStaticMode) {
+            this.adapterManager.setAdapter('alps2dot');
+        }
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
@@ -183,7 +187,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
 
 </alps>`;
-            
+
             this.editor.setValue(defaultXml);
             this.editor.getSession().setMode("ace/mode/xml");
         } catch (error) {
@@ -213,7 +217,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                     }
                 };
             } else {
-                const schemaResponse = await axios.get('/alps.json');
+                const schemaResponse = await axios.get('alps.json');
                 this.alpsSchema = schemaResponse.data;
             }
         } catch (error) {
@@ -335,15 +339,15 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     async updatePreview(content, fileType) {
         try {
             this.debugLog(`Using ${this.adapterManager.getCurrentAdapter().getName()} for diagram generation`);
-            
+
             // Use the adapter manager to generate diagram
             const url = await this.adapterManager.generateDiagram(content, fileType);
-            
+
             document.getElementById('preview-frame').src = url;
             this.debugLog('Preview updated');
             this.updateValidationMark(true);
             this.displayErrors([]);
-            
+
         } catch (error) {
             this.handleError(error, 'Diagram generation failed');
             this.updateValidationMark(false);
@@ -359,7 +363,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     setupAdapterSelector() {
         const selector = document.getElementById('diagramAdapter');
-        
+
         if (this.isLocalMode || this.isStaticMode) {
             // ローカルモードまたはstatic hostingではDiagramのみ利用可能
             this.adapterManager.setAdapter('alps2dot');
@@ -370,7 +374,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             // Set current value
             selector.value = this.adapterManager.currentAdapter;
         }
-        
+
         // Handle changes
         selector.addEventListener('change', (event) => {
             const newAdapter = event.target.value;
@@ -446,21 +450,21 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
         // Clear container and create elements safely to prevent XSS
         errorContainer.innerHTML = '';
-        
+
         const errorTitle = document.createElement('div');
         errorTitle.className = 'error-title';
         errorTitle.textContent = 'Errors';
         errorContainer.appendChild(errorTitle);
-        
+
         errors.forEach(error => {
             const errorMessage = document.createElement('div');
             errorMessage.className = 'error-message';
             errorMessage.textContent = error.text;
-            
+
             const errorLocation = document.createElement('div');
             errorLocation.className = 'error-location';
             errorLocation.textContent = `Line: ${error.row + 1}, Column: ${error.column + 1}`;
-            
+
             errorContainer.appendChild(errorMessage);
             errorContainer.appendChild(errorLocation);
         });
