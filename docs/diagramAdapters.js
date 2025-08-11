@@ -382,10 +382,10 @@ class Alps2DotAdapter extends DiagramAdapter {
 
     getTransitionSymbol(type) {
         switch (type) {
-            case 'safe': return '■';
-            case 'unsafe': return '■';
-            case 'idempotent': return '■';
-            default: return '■';
+            case 'safe': return '■';         // Filled square for safe
+            case 'unsafe': return '▲';       // Filled triangle for unsafe
+            case 'idempotent': return '●';   // Filled circle for idempotent
+            default: return '□';             // Empty square for unknown/other
         }
     }
 }
