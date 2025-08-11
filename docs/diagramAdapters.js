@@ -182,6 +182,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Listen for highlight messages from parent window
+    window.addEventListener('message', function(event) {
+        if (event.data) {
+            if (event.data.type === 'highlightElement') {
+                highlightElementInSVG(event.data.text);
+            } else if (event.data.type === 'clearHighlights') {
+                clearHighlightsInSVG();
+            }
+        }
+    });
+    
+    function highlightElementInSVG(text) {
+        console.log('Highlighting in SVG:', text);
+        
+        // Clear previous highlights
+        clearHighlightsInSVG();
+        
+        // Find SVG elements that contain this text
+        const svgElements = document.querySelectorAll('svg text, svg title');
+        svgElements.forEach(element => {
+            if (element.textContent && element.textContent.includes(text)) {
+                // Find the parent group or shape to highlight
+                let parentShape = element.closest('g');
+                if (parentShape) {
+                    parentShape.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                    parentShape.style.opacity = '0.8';
+                    parentShape.classList.add('highlighted');
+                    console.log('Highlighted element:', parentShape);
+                }
+            }
+        });
+        
+        // Also try to find by exact ID match
+        const exactMatches = document.querySelectorAll(\`svg [id*="\${text}"], svg [class*="\${text}"]\`);
+        exactMatches.forEach(element => {
+            element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+            element.style.opacity = '0.8';
+            element.classList.add('highlighted');
+            console.log('Highlighted exact match:', element);
+        });
+    }
+    
+    function clearHighlightsInSVG() {
+        const highlighted = document.querySelectorAll('.highlighted');
+        highlighted.forEach(element => {
+            element.style.filter = '';
+            element.style.opacity = '';
+            element.classList.remove('highlighted');
+        });
+    }
+    
     // Also try with regular click event on the whole document
     document.addEventListener('click', function(e) {
         if (e.target.tagName === 'a' || e.target.closest('a')) {
