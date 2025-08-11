@@ -381,11 +381,12 @@ class Alps2DotAdapter extends DiagramAdapter {
     }
 
     getTransitionSymbol(type) {
+        // Use consistent square symbol - color differentiation is sufficient
         switch (type) {
-            case 'safe': return '■';         // Filled square for safe
-            case 'unsafe': return '▲';       // Filled triangle for unsafe
-            case 'idempotent': return '●';   // Filled circle for idempotent
-            default: return '□';             // Empty square for unknown/other
+            case 'safe': return '■';
+            case 'unsafe': return '■';
+            case 'idempotent': return '■';
+            default: return '■';
         }
     }
 }
