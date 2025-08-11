@@ -134,7 +134,35 @@ class Alps2DotAdapter extends DiagramAdapter {
             const dotContent = this.convertAlpsToDot(content, fileType);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
 
-            // Now let's render the DOT as SVG using WASM Graphviz
+            // Try rendering in the parent context first using @hpcc-js/wasm to avoid iframe dependency timing
+            const ensureHpccInParent = () => new Promise((resolve) => {
+                if (window["@hpcc-js/wasm"]) {
+                    resolve(true);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js';
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.head.appendChild(script);
+            });
+
+            try {
+                const ok = await ensureHpccInParent();
+                const wasm = window["@hpcc-js/wasm"];
+                if (ok && wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function') {
+                    const svg = await wasm.graphviz.layout(dotContent, 'svg', 'dot');
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
+</head><body><div class="container">${svg}</div></body></html>`;
+                    const blob = new Blob([html], { type: 'text/html' });
+                    return URL.createObjectURL(blob);
+                }
+            } catch (e) {
+                console.warn('Parent-context Graphviz render failed; falling back to iframe loader.', e);
+            }
+
+            // Fallback: render inside iframe HTML (kept for environments where parent loading is blocked)
             const html = `
                     <!DOCTYPE html>
                     <html>
