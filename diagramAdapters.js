@@ -83,7 +83,16 @@ class AsdAdapter extends DiagramAdapter {
                 </script>`;
                 
                 // Insert the code before the closing </head> tag
-                responseText = responseText.replace('</head>', initializationCode + '\n</head>');
+                if (responseText.includes('</head>')) {
+                    responseText = responseText.replace('</head>', initializationCode + '\n</head>');
+                } else {
+                    // Fallback: insert before </body> or at end
+                    if (responseText.includes('</body>')) {
+                        responseText = responseText.replace('</body>', initializationCode + '\n</body>');
+                    } else {
+                        responseText += initializationCode;
+                    }
+                }
 
                 const blob = new Blob([responseText], { type: 'text/html' });
                 return URL.createObjectURL(blob);

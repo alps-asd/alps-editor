@@ -90,31 +90,26 @@ class AlpsEditor {
 
     async setupCompletion() {
         try {
-            if (this.isLocalMode) {
-                // ローカルモード用の簡易スキーマ
-                this.alpsSchema = {
-                    type: "object",
-                    properties: {
-                        alps: {
-                            type: "object",
-                            properties: {
-                                version: { type: "string" },
-                                title: { type: "string" },
-                                doc: { type: ["string", "object"] },
-                                descriptor: {
-                                    type: "array",
-                                    items: { type: "object" }
-                                }
+            // Use embedded simplified schema for reliability
+            this.alpsSchema = {
+                type: "object",
+                properties: {
+                    alps: {
+                        type: "object",
+                        properties: {
+                            version: { type: "string" },
+                            title: { type: "string" },
+                            doc: { type: ["string", "object"] },
+                            descriptor: {
+                                type: "array",
+                                items: { type: "object" }
                             }
                         }
                     }
-                };
-            } else {
-                const schemaResponse = await axios.get('/alps.json');
-                this.alpsSchema = schemaResponse.data;
-            }
+                }
+            };
         } catch (error) {
-            this.handleError(error, 'Failed to load ALPS schema');
+            this.handleError(error, 'Failed to initialize ALPS schema');
         }
 
         const originalSetAnnotations = this.editor.getSession().setAnnotations.bind(this.editor.getSession());
