@@ -48,6 +48,7 @@ composer serve
 ### 🎯 Interactive Diagram Experience
 - **Bidirectional highlighting**: Select text in editor → elements glow in diagram
 - **Click-to-jump navigation**: Click diagram elements → jump to code line
+- **Double-click external links**: Double-click documentation links to open in new tab
 - **Dual rendering modes**: Switch between Document (ASD) and Diagram (SVG) views
 - **Real-time visual feedback**: Instant synchronization between editor and diagrams
 
