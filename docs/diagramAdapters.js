@@ -394,11 +394,11 @@ class Alps2DotAdapter extends DiagramAdapter {
 // Adapter factory and manager
 class DiagramAdapterManager {
     constructor() {
+        // Static version - only alps2dot adapter available (no PHP server)
         this.adapters = {
-            'asd': new AsdAdapter(),
             'alps2dot': new Alps2DotAdapter()
         };
-        this.currentAdapter = 'asd'; // default
+        this.currentAdapter = 'alps2dot';
         this.loadSetting();
     }
 
