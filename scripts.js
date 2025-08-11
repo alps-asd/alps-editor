@@ -14,6 +14,10 @@ class AlpsEditor {
         // Portable static detection: prefer explicit flag; default to static when flag is absent
         const hasApi = (typeof window.ALPSEDITOR_HAS_API === 'boolean') ? window.ALPSEDITOR_HAS_API : false;
         this.isStaticMode = !hasApi || this.isLocalMode;
+        // Ensure static/local environments use client-side diagramming before first preview
+        if (this.isLocalMode || this.isStaticMode) {
+            this.adapterManager.setAdapter('alps2dot');
+        }
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
