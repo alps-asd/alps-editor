@@ -1,4 +1,5 @@
 import { SEMANTIC_TERMS } from './semanticTerms.js';
+import { DiagramAdapterManager } from './diagramAdapters.js';
 
 class AlpsEditor {
     constructor() {
@@ -8,6 +9,7 @@ class AlpsEditor {
         this.ajv = new Ajv({ allErrors: true, verbose: true });
         this.customAnnotations = [];
         this.isDebugMode = false;
+        this.adapterManager = new DiagramAdapterManager();
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
@@ -57,6 +59,7 @@ class AlpsEditor {
             this.setupDragAndDrop();
             this.setupCompleteHref();
             this.setupDownloadButton();
+            this.setupAdapterSelector();
         });
     }
 
@@ -202,33 +205,44 @@ class AlpsEditor {
 
     async updatePreview(content, fileType) {
         try {
-            this.debugLog('Calling API for validation and preview...');
-            const response = await axios.post('/api/', content, {
-                headers: { 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml' },
-                responseType: 'arraybuffer',
-            });
-
-            if (response.status === 200) {
-                const blob = new Blob([response.data], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                document.getElementById('preview-frame').src = url;
-                this.debugLog('Preview updated');
-                this.updateValidationMark(true);
-                this.displayErrors([]);
-            } else {
-                throw new Error(`Unexpected status code: ${response.status}`);
-            }
+            this.debugLog(`Using ${this.adapterManager.getCurrentAdapter().getName()} for diagram generation`);
+            
+            // Use the adapter manager to generate diagram
+            const url = await this.adapterManager.generateDiagram(content, fileType);
+            
+            document.getElementById('preview-frame').src = url;
+            this.debugLog('Preview updated');
+            this.updateValidationMark(true);
+            this.displayErrors([]);
+            
         } catch (error) {
-            this.handleError(error, 'API call failed');
+            this.handleError(error, 'Diagram generation failed');
             this.updateValidationMark(false);
-            const apiErrors = error.response ? this.handleApiError(error.response) : [{
+            const apiErrors = [{
                 row: 0,
                 column: 0,
-                text: 'API call failed: ' + error.message,
+                text: 'Diagram generation failed: ' + error.message,
                 type: 'error'
             }];
             this.displayErrors(apiErrors);
         }
+    }
+
+    setupAdapterSelector() {
+        const selector = document.getElementById('diagramAdapter');
+        
+        // Set current value
+        selector.value = this.adapterManager.currentAdapter;
+        
+        // Handle changes
+        selector.addEventListener('change', (event) => {
+            const newAdapter = event.target.value;
+            if (this.adapterManager.setAdapter(newAdapter)) {
+                this.debugLog(`Switched to ${newAdapter} adapter`);
+                // Regenerate preview with new adapter
+                this.validateAndPreview();
+            }
+        });
     }
 
     handleApiError(errorResponse) {
