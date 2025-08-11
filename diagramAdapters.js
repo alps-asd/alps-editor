@@ -28,7 +28,7 @@ class AsdAdapter extends DiagramAdapter {
 
             if (response.status === 200) {
                 // Extract DOT content from ASD response for comparison
-                const responseText = new TextDecoder().decode(response.data);
+                let responseText = new TextDecoder().decode(response.data);
                 const dotMatch = responseText.match(/digraph[^}]*}/s);
                 if (dotMatch) {
                     console.log('ASD DOT Content:', dotMatch[0]);
@@ -45,7 +45,47 @@ class AsdAdapter extends DiagramAdapter {
                     }, 100);
                 }
 
-                const blob = new Blob([response.data], { type: 'text/html' });
+                // Add CSS and script to ensure proper initial display
+                const initializationCode = `
+                <style>
+                #asd-graph-name { 
+                    display: none; 
+                }
+                </style>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const showIdRadio = document.getElementById('asd-show-id');
+                    const showNameRadio = document.getElementById('asd-show-name');
+                    const idGraph = document.getElementById('asd-graph-id');
+                    const nameGraph = document.getElementById('asd-graph-name');
+                    
+                    if (showIdRadio && showNameRadio && idGraph && nameGraph) {
+                        showIdRadio.addEventListener('change', function() {
+                            if (this.checked) {
+                                idGraph.style.display = 'block';
+                                nameGraph.style.display = 'none';
+                            }
+                        });
+                        
+                        showNameRadio.addEventListener('change', function() {
+                            if (this.checked) {
+                                nameGraph.style.display = 'block';
+                                idGraph.style.display = 'none';
+                            }
+                        });
+                        
+                        // 初期化：IDボタンをプログラムでクリック
+                        setTimeout(() => {
+                            showIdRadio.click();
+                        }, 100);
+                    }
+                });
+                </script>`;
+                
+                // Insert the code before the closing </head> tag
+                responseText = responseText.replace('</head>', initializationCode + '\n</head>');
+
+                const blob = new Blob([responseText], { type: 'text/html' });
                 return URL.createObjectURL(blob);
             } else {
                 throw new Error(`ASD generation failed with status: ${response.status}`);
