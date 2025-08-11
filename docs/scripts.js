@@ -485,6 +485,21 @@ class AlpsEditor {
             const content = this.editor.getValue();
             const fileType = this.detectFileType(content);
 
+            if (this.isLocalMode || this.isStaticMode) {
+                // Static版では単純にALPSファイルをダウンロード
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                this.debugLog('ALPS profile downloaded');
+                return;
+            }
+
             try {
                 this.debugLog('Starting API request...');
                 const response = await axios.post('/api/', content, {
