@@ -10,14 +10,6 @@ class AlpsEditor {
         this.customAnnotations = [];
         this.isDebugMode = false;
         this.adapterManager = new DiagramAdapterManager();
-        this.isLocalMode = window.location.protocol === 'file:'; // ローカルファイルで開いているかチェック
-        // Portable static detection: prefer explicit flag; default to static when flag is absent
-        const hasApi = (typeof window.ALPSEDITOR_HAS_API === 'boolean') ? window.ALPSEDITOR_HAS_API : false;
-        this.isStaticMode = !hasApi || this.isLocalMode;
-        // Ensure static/local environments use client-side diagramming before first preview
-        if (this.isLocalMode || this.isStaticMode) {
-            this.adapterManager.setAdapter('alps2dot');
-        }
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
@@ -68,8 +60,6 @@ class AlpsEditor {
             this.setupCompleteHref();
             this.setupDownloadButton();
             this.setupAdapterSelector();
-            this.setupDiagramClickHandler();
-            this.setupEditorSelectionHandler();
         });
     }
 
@@ -84,114 +74,8 @@ class AlpsEditor {
 
     async loadDefaultXml() {
         try {
-            // Default ALPS XML embedded directly in JavaScript - no external files needed
-            const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
-<!--
-Welcome to Alps Editor! Let's make API design fun and effective.
-
-Quick tips:
-- Press Ctrl + Space to show snippets for auto-completion (suggested terms are from Schema.org)
-- To start from scratch, delete all content and press Ctrl + Space, then select "Skeleton"
-  (For JSON format, type "{" first)
-- Drag and drop an ALPS file (JSON, XML, or HTML) into the editor to open it
-  (For HTML files, the ALPS profile contained within will be extracted)
-- Hit Ctrl + S to download your work anytime
-
-ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
-
-Learn more about ALPS:
-- Official ALPS website: http://alps.io/
-- app-state-diagram: https://www.app-state-diagram.com/
-
-Happy modeling! Remember, solid semantics supports the long-term evolution of your APIs. :)
--->
-<alps
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
-    <title>ALPS Online Shopping</title>
-    <doc>This is a sample ALPS profile demonstrating the semantic descriptors
-        and operations for a basic e-commerce system. It includes product listing,
-        shopping cart management, and checkout process, serving as an educational
-        example for ALPS implementation in online shopping contexts.</doc>
-
-    <!-- Ontology -->
-    <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
-    <descriptor id="name" def="https://schema.org/name" title="name"/>
-    <descriptor id="description" def="https://schema.org/description" title="description"/>
-    <descriptor id="price" def="https://schema.org/price" title="price"/>
-    <descriptor id="quantity" def="https://schema.org/Quantity" title="quantity"/>
-    <descriptor id="email" def="https://schema.org/email" title="email"/>
-    <descriptor id="address" def="https://schema.org/address" title="address"/>
-
-    <!-- Taxonomy -->
-    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection">
-        <descriptor href="#id"/>
-        <descriptor href="#name"/>
-        <descriptor href="#description"/>
-        <descriptor href="#goProductDetail"/>
-        <descriptor href="#goCart"/>
-        <descriptor href="#goProductList"/>
-    </descriptor>
-
-    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item">
-        <descriptor href="#id"/>
-        <descriptor href="#name"/>
-        <descriptor href="#description"/>
-        <descriptor href="#price"/>
-        <descriptor href="#goProductList"/>
-        <descriptor href="#doAddToCart"/>
-    </descriptor>
-
-    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection">
-        <descriptor href="#id"/>
-        <descriptor href="#goProductList"/>
-        <descriptor href="#goCheckout"/>
-        <descriptor href="#doUpdateQuantity"/>
-        <descriptor href="#doRemoveItem"/>
-    </descriptor>
-
-    <descriptor id="Checkout" title="Checkout">
-        <descriptor href="#email"/>
-        <descriptor href="#address"/>
-        <descriptor href="#goPayment"/>
-    </descriptor>
-
-    <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment">
-        <descriptor href="#doPayment"/>
-    </descriptor>
-
-    <!-- Choreography -->
-    <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list">
-        <descriptor href="#id"/>
-    </descriptor>
-
-    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
-        <descriptor href="#id"/>
-    </descriptor>
-
-    <descriptor id="goCart" type="safe" rt="#Cart" title="View shopping cart"/>
-
-    <descriptor id="goCheckout" type="safe" rt="#Checkout" title="Proceed to checkout"/>
-
-    <descriptor id="goPayment" type="safe" rt="#Payment" title="Proceed to payment"/>
-
-    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add product to cart">
-        <descriptor href="#id"/>
-        <descriptor href="#quantity"/>
-    </descriptor>
-
-    <descriptor id="doUpdateQuantity" type="idempotent" rt="#Cart" title="Update item quantity">
-        <descriptor href="#id"/>
-        <descriptor href="#quantity"/>
-    </descriptor>
-    <descriptor id="doRemoveItem" type="idempotent" rt="#Cart" title="Remove item from cart">
-        <descriptor href="#id"/>
-    </descriptor>
-
-    <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
-
-</alps>`;
-
+            const response = await fetch('/default-alps.xml');
+            const defaultXml = await response.text();
             this.editor.setValue(defaultXml);
             this.editor.getSession().setMode("ace/mode/xml");
         } catch (error) {
@@ -201,26 +85,10 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     async setupCompletion() {
         try {
-            // Use embedded simplified schema for reliability
-            this.alpsSchema = {
-                type: "object",
-                properties: {
-                    alps: {
-                        type: "object",
-                        properties: {
-                            version: { type: "string" },
-                            title: { type: "string" },
-                            doc: { type: ["string", "object"] },
-                            descriptor: {
-                                type: "array",
-                                items: { type: "object" }
-                            }
-                        }
-                    }
-                }
-            };
+            const schemaResponse = await axios.get('/alps.json');
+            this.alpsSchema = schemaResponse.data;
         } catch (error) {
-            this.handleError(error, 'Failed to initialize ALPS schema');
+            this.handleError(error, 'Failed to load ALPS schema');
         }
 
         const originalSetAnnotations = this.editor.getSession().setAnnotations.bind(this.editor.getSession());
@@ -283,7 +151,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     unescapeHtml(html) {
         const txt = document.createElement('textarea');
-        txt.textContent = html; // Use textContent instead of innerHTML to prevent XSS
+        txt.innerHTML = html;
         return txt.value;
     }
 
@@ -338,15 +206,15 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     async updatePreview(content, fileType) {
         try {
             this.debugLog(`Using ${this.adapterManager.getCurrentAdapter().getName()} for diagram generation`);
-
+            
             // Use the adapter manager to generate diagram
             const url = await this.adapterManager.generateDiagram(content, fileType);
-
+            
             document.getElementById('preview-frame').src = url;
             this.debugLog('Preview updated');
             this.updateValidationMark(true);
             this.displayErrors([]);
-
+            
         } catch (error) {
             this.handleError(error, 'Diagram generation failed');
             this.updateValidationMark(false);
@@ -362,18 +230,10 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     setupAdapterSelector() {
         const selector = document.getElementById('diagramAdapter');
-
-        if (this.isLocalMode || this.isStaticMode) {
-            // ローカル/静的ホスティングではDiagramのみ利用可能
-            this.adapterManager.setAdapter('alps2dot');
-            selector.value = 'alps2dot';
-            selector.disabled = true;
-            selector.title = this.isStaticMode ? 'Static版ではDiagramモードのみ利用可能です' : 'ローカルモードではDiagramモードのみ利用可能です';
-        } else {
-            // Set current value
-            selector.value = this.adapterManager.currentAdapter;
-        }
-
+        
+        // Set current value
+        selector.value = this.adapterManager.currentAdapter;
+        
         // Handle changes
         selector.addEventListener('change', (event) => {
             const newAdapter = event.target.value;
@@ -447,26 +307,13 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             return;
         }
 
-        // Clear container and create elements safely to prevent XSS
-        errorContainer.innerHTML = '';
-
-        const errorTitle = document.createElement('div');
-        errorTitle.className = 'error-title';
-        errorTitle.textContent = 'Errors';
-        errorContainer.appendChild(errorTitle);
-
-        errors.forEach(error => {
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'error-message';
-            errorMessage.textContent = error.text;
-
-            const errorLocation = document.createElement('div');
-            errorLocation.className = 'error-location';
-            errorLocation.textContent = `Line: ${error.row + 1}, Column: ${error.column + 1}`;
-
-            errorContainer.appendChild(errorMessage);
-            errorContainer.appendChild(errorLocation);
-        });
+        errorContainer.innerHTML = `
+            <div class="error-title">Errors</div>
+            ${errors.map(error => `
+                <div class="error-message">${error.text}</div>
+                <div class="error-location">Line: ${error.row + 1}, Column: ${error.column + 1}</div>
+            `).join('')}
+        `;
         errorContainer.style.display = 'block';
     }
 
@@ -570,21 +417,6 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             const content = this.editor.getValue();
             const fileType = this.detectFileType(content);
-
-            if (this.isLocalMode || this.isStaticMode) {
-                // Static/Local: download the ALPS content directly
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                this.debugLog('ALPS profile downloaded');
-                return;
-            }
 
             try {
                 this.debugLog('Starting API request...');
@@ -779,85 +611,6 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                 callback(null, completions);
             },
         };
-    }
-
-    setupDiagramClickHandler() {
-        // Listen for messages from iframe diagram
-        window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'jumpToId') {
-                const id = event.data.id;
-                console.log('Jumping to ID:', id);
-                this.jumpToId(id);
-            }
-        });
-    }
-
-    jumpToId(id) {
-        if (!this.editor || !id) return;
-        
-        // Search for id="searchId" in the editor content
-        const searchTerm = `id="${id}"`;
-        console.log('Searching for:', searchTerm);
-        
-        // Find the text first
-        const range = this.editor.find(searchTerm, {
-            backwards: false,
-            wrap: true,
-            caseSensitive: true,
-            wholeWord: false,
-            regExp: false
-        });
-        
-        if (range) {
-            // Get the line number where the match was found
-            const lineNumber = range.start.row;
-            
-            // Select the entire line
-            this.editor.selection.selectLine();
-            
-            console.log('Selected entire line:', lineNumber);
-        }
-        
-        // Focus the editor after search
-        this.editor.focus();
-    }
-
-    setupEditorSelectionHandler() {
-        if (!this.editor) return;
-
-        // Listen for selection changes in the editor
-        this.editor.on('changeSelection', () => {
-            const selectedText = this.editor.getSelectedText();
-            if (selectedText) {
-                console.log('Selected text:', selectedText);
-                this.highlightInDiagram(selectedText);
-            } else {
-                // Clear highlights when no selection
-                this.clearDiagramHighlights();
-            }
-        });
-    }
-
-    highlightInDiagram(selectedText) {
-        // Send message to diagram iframe to highlight elements
-        const previewFrame = document.getElementById('preview-frame');
-        if (previewFrame && previewFrame.contentWindow) {
-            previewFrame.contentWindow.postMessage({
-                type: 'highlightElement',
-                text: selectedText
-            }, '*');
-            console.log('Sent highlight message to diagram:', selectedText);
-        }
-    }
-
-    clearDiagramHighlights() {
-        // Send message to diagram iframe to clear highlights
-        const previewFrame = document.getElementById('preview-frame');
-        if (previewFrame && previewFrame.contentWindow) {
-            previewFrame.contentWindow.postMessage({
-                type: 'clearHighlights'
-            }, '*');
-        }
     }
 }
 
