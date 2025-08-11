@@ -68,6 +68,7 @@ class AlpsEditor {
             this.setupCompleteHref();
             this.setupDownloadButton();
             this.setupAdapterSelector();
+            this.setupDiagramClickHandler();
         });
     }
 
@@ -782,6 +783,37 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                 callback(null, completions);
             },
         };
+    }
+
+    setupDiagramClickHandler() {
+        // Listen for messages from iframe diagram
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'jumpToId') {
+                const id = event.data.id;
+                console.log('Jumping to ID:', id);
+                this.jumpToId(id);
+            }
+        });
+    }
+
+    jumpToId(id) {
+        if (!this.editor || !id) return;
+        
+        // Search for id="searchId" in the editor content
+        const searchTerm = `id="${id}"`;
+        console.log('Searching for:', searchTerm);
+        
+        // Use Ace editor's find functionality
+        this.editor.find(searchTerm, {
+            backwards: false,
+            wrap: true,
+            caseSensitive: true,
+            wholeWord: false,
+            regExp: false
+        });
+        
+        // Focus the editor after search
+        this.editor.focus();
     }
 }
 

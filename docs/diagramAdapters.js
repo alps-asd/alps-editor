@@ -152,7 +152,58 @@ class Alps2DotAdapter extends DiagramAdapter {
                     
                     // Return the SVG directly as data URL for iframe-less display
                     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
-<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;} a{cursor:pointer;}</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to all SVG elements with href="#something"
+    const svgLinks = document.querySelectorAll('svg a[href^="#"], svg a[*|href^="#"]');
+    console.log('Found SVG links:', svgLinks.length);
+    
+    svgLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('SVG link clicked:', this);
+            
+            const href = this.getAttribute('href') || this.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            if (href && href.startsWith('#')) {
+                const id = href.substring(1);
+                console.log('Extracted ID:', id);
+                
+                if (window.parent !== window) {
+                    // Send message to parent window to search for this ID in the editor
+                    window.parent.postMessage({
+                        type: 'jumpToId',
+                        id: id
+                    }, '*');
+                    console.log('Message sent to parent');
+                }
+            }
+        });
+    });
+    
+    // Also try with regular click event on the whole document
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'a' || e.target.closest('a')) {
+            const link = e.target.tagName === 'a' ? e.target : e.target.closest('a');
+            const href = link.getAttribute('href') || link.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = href.substring(1);
+                console.log('Document click - extracted ID:', id);
+                
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'jumpToId',
+                        id: id
+                    }, '*');
+                }
+            }
+        }
+    });
+});
+</script>
 </head><body><div class="container">${svgString}</div></body></html>`;
                     const blob = new Blob([html], { type: 'text/html' });
                     return URL.createObjectURL(blob);
@@ -269,7 +320,7 @@ class Alps2DotAdapter extends DiagramAdapter {
         // Add state nodes
         states.forEach(state => {
             if (state.id) {
-                dot += `    ${state.id} [margin=0.1, label="${state.title || state.id}", shape=box, URL="#${state.id}" target="_parent"]\n`;
+                dot += `    ${state.id} [margin=0.1, label="${state.title || state.id}", shape=box, URL="#${state.id}"]\n`;
             }
         });
 
@@ -285,8 +336,8 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const color = this.getTransitionColor(trans.type);
                     const symbol = this.getTransitionSymbol(trans.type);
 
-                    // Use colored square emoji + black text
-                    dot += `    ${sourceState} -> ${targetState} [label="${symbol} ${trans.id}" URL="#${trans.id}" target="_parent" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
+                    // Use colored square emoji + black text (no target to prevent navigation)
+                    dot += `    ${sourceState} -> ${targetState} [label="${symbol} ${trans.id}" URL="#${trans.id}" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
                 });
             }
         });
@@ -296,7 +347,7 @@ class Alps2DotAdapter extends DiagramAdapter {
         // Add basic state nodes again (for compatibility)
         states.forEach(state => {
             if (state.id) {
-                dot += `    ${state.id} [label="${state.title || state.id}" URL="#${state.id}" target="_parent"]\n`;
+                dot += `    ${state.id} [label="${state.title || state.id}" URL="#${state.id}"]\n`;
             }
         });
 
