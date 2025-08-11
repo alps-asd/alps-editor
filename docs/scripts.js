@@ -201,26 +201,31 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     async setupCompletion() {
         try {
-            // Use embedded simplified schema for reliability
-            this.alpsSchema = {
-                type: "object",
-                properties: {
-                    alps: {
-                        type: "object",
-                        properties: {
-                            version: { type: "string" },
-                            title: { type: "string" },
-                            doc: { type: ["string", "object"] },
-                            descriptor: {
-                                type: "array",
-                                items: { type: "object" }
+            if (this.isLocalMode) {
+                // ローカルモード用の簡易スキーマ
+                this.alpsSchema = {
+                    type: "object",
+                    properties: {
+                        alps: {
+                            type: "object",
+                            properties: {
+                                version: { type: "string" },
+                                title: { type: "string" },
+                                doc: { type: ["string", "object"] },
+                                descriptor: {
+                                    type: "array",
+                                    items: { type: "object" }
+                                }
                             }
                         }
                     }
-                }
-            };
+                };
+            } else {
+                const schemaResponse = await axios.get('alps.json');
+                this.alpsSchema = schemaResponse.data;
+            }
         } catch (error) {
-            this.handleError(error, 'Failed to initialize ALPS schema');
+            this.handleError(error, 'Failed to load ALPS schema');
         }
 
         const originalSetAnnotations = this.editor.getSession().setAnnotations.bind(this.editor.getSession());
@@ -364,7 +369,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         const selector = document.getElementById('diagramAdapter');
 
         if (this.isLocalMode || this.isStaticMode) {
-            // ローカル/静的ホスティングではDiagramのみ利用可能
+            // ローカルモードまたはstatic hostingではDiagramのみ利用可能
             this.adapterManager.setAdapter('alps2dot');
             selector.value = 'alps2dot';
             selector.disabled = true;
@@ -572,7 +577,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             const fileType = this.detectFileType(content);
 
             if (this.isLocalMode || this.isStaticMode) {
-                // Static/Local: download the ALPS content directly
+                // Static版では単純にALPSファイルをダウンロード
                 const blob = new Blob([content], { type: 'text/plain' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');

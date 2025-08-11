@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Viz.js Test</title>
+    <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
+    <script src="https://unpkg.com/viz.js@2.1.2/lite.render.js"></script>
+</head>
+<body>
+    <h1>Viz.js Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        console.log('Initial check - Viz available:', typeof window.Viz);
+        
+        // Check periodically for Viz.js loading
+        let checkCount = 0;
+        const checkViz = () => {
+            checkCount++;
+            console.log(`Check ${checkCount} - Viz available:`, typeof window.Viz);
+            if (window.Viz && typeof window.Viz === 'function') {
+                console.log('Viz.js loaded successfully!');
+                testViz();
+            } else if (checkCount < 50) {
+                setTimeout(checkViz, 100);
+            } else {
+                console.error('Viz.js failed to load after 5 seconds');
+                document.getElementById('output').innerHTML = '<p style="color: red;">Viz.js failed to load</p>';
+            }
+        };
+        
+        async function testViz() {
+            const dot = 'digraph { A -> B; }';
+            try {
+                if (window.Viz) {
+                    const viz = new window.Viz();
+                    const svg = await viz.renderString(dot, { format: 'svg' });
+                    document.getElementById('output').innerHTML = svg;
+                    console.log('Success: SVG generated with viz.js@2.1.2');
+                } else {
+                    throw new Error('Viz.js not available');
+                }
+            } catch (e) {
+                console.error('Error generating SVG:', e);
+                document.getElementById('output').innerHTML = '<p style="color: red;">Error: ' + e.message + '</p>';
+            }
+        }
+        
+        // Start checking immediately and on DOM ready
+        checkViz();
+        document.addEventListener('DOMContentLoaded', checkViz);
+    </script>
+</body>
+</html>

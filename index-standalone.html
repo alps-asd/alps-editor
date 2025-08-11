@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPS Editor - Local Version</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.6/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.9.6/ext-language_tools.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/6.12.6/ajv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/json-to-ast@2.1.0/build.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #top-bar {
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px;
+        }
+
+        #title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #controls {
+            display: flex;
+            align-items: center;
+        }
+
+        #fileTypeDisplay {
+            margin-right: 20px;
+        }
+
+        #diagramAdapter {
+            margin-right: 15px;
+        }
+
+        #diagramAdapter:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #validationMark {
+            margin-right: 10px;
+        }
+
+        #downloadBtn {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #main-container {
+            display: flex;
+            height: calc(100vh - 71px);
+        }
+
+        #editor-container {
+            width: 50%;
+            border-right: 1px solid #ddd;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+
+        #preview-container {
+            width: 50%;
+            position: relative;
+        }
+
+        #error-container {
+            display: none;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-bottom: 1px solid #f5c6cb;
+        }
+
+        .error-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            margin: 2px 0;
+        }
+
+        .error-location {
+            font-size: 12px;
+            color: #856404;
+        }
+
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #debug {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: black;
+            color: green;
+            font-family: monospace;
+            font-size: 12px;
+            overflow: auto;
+            padding: 10px;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+<div id="top-bar">
+    <div id="title">ALPS Editor - Local Version</div>
+    <div id="controls">
+        <span id="fileTypeDisplay"></span>
+        <select id="diagramAdapter" disabled title="ローカルモードではDiagramモードのみ利用可能です">
+            <option value="alps2dot">Diagram (Local)</option>
+        </select>
+        <span id="validationMark"></span>
+        <button id="downloadBtn">Download</button>
+    </div>
+</div>
+<div id="main-container">
+    <div id="editor-container">
+        <div id="editor"></div>
+    </div>
+    <div id="preview-container">
+        <div id="error-container"></div>
+        <iframe id="preview-frame" src="about:blank"></iframe>
+    </div>
+</div>
+<div id="debug"></div>
+
+<script>
+// Semantic terms (from semanticTerms.js)
+const SEMANTIC_TERMS = [
+    'Thing', 'Action', 'CreativeWork', 'Event', 'Intangible', 'Organization', 'Person', 'Place', 'Product'
+];
+
+// Alps2Dot Adapter (simplified local version)
+class Alps2DotAdapter {
+    constructor() {
+        this.name = 'alps2dot';
+    }
+
+    getName() {
+        return this.name;
+    }
+
+    async generate(content, fileType) {
+        try {
+            console.log('Alps2DotAdapter.generate called with:', { content: content.substring(0, 200) + '...', fileType });
+            
+            // Generate DOT content using simple ALPS to DOT conversion
+            const dotContent = this.convertAlpsToDot(content, fileType);
+            console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
+            
+            // Now let's render the DOT as SVG using WASM Graphviz
+            const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>ALPS Diagram (alps2dot + Graphviz)</title>
+                        <script src="https://d3js.org/d3.v7.min.js"></script>
+                        <script src="https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js"></script>
+                        <script src="https://unpkg.com/d3-graphviz@5.6.0/build/d3-graphviz.min.js"></script>
+                        <style>
+                            body { 
+                                margin: 0; 
+                                padding: 20px; 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                background: #f8f9fa;
+                            }
+                            .container {
+                                background: white;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                                padding: 20px;
+                                min-height: 400px;
+                            }
+                            .loading {
+                                color: #666;
+                                text-align: center;
+                                padding: 40px 20px;
+                            }
+                            #graphviz-output {
+                                text-align: center;
+                                margin-top: 20px;
+                            }
+                            #graphviz-output svg {
+                                max-width: 100%;
+                                height: auto;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div id="graphviz-output">
+                                <div class="loading">Loading Graphviz WASM...</div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            // Auto-render when page loads
+                            document.addEventListener('DOMContentLoaded', function() {
+                                tryGraphvizRender();
+                            });
+
+                            // Also try immediately if DOM is already loaded
+                            if (document.readyState !== 'loading') {
+                                tryGraphvizRender();
+                            }
+                            
+                            async function tryGraphvizRender() {
+                                const outputDiv = document.getElementById('graphviz-output');
+                                if (!outputDiv) {
+                                    setTimeout(tryGraphvizRender, 100);
+                                    return;
+                                }
+                                
+                                try {
+                                    // Create a div for d3-graphviz
+                                    outputDiv.innerHTML = '<div id="graph"></div>';
+                                    
+                                    // Wait a moment for libraries to be ready
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                    
+                                    // Use d3-graphviz like ASD does
+                                    const dot = \`${dotContent.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+                                    
+                                    // Render using d3-graphviz (same approach as ASD)
+                                    d3.select("#graph")
+                                        .graphviz()
+                                        .renderDot(dot);
+                                    
+                                } catch (error) {
+                                    console.error('Graphviz rendering error:', error);
+                                    outputDiv.innerHTML = \`
+                                        <div style="color: #dc3545; padding: 20px; text-align: left;">
+                                            <strong>Diagram rendering failed:</strong><br>
+                                            \${error.message}<br><br>
+                                            <details>
+                                                <summary>View DOT source</summary>
+                                                <pre style="background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;">\${dotContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                                            </details>
+                                        </div>
+                                    \`;
+                                }
+                            }
+                        </script>
+                    </body>
+                    </html>
+                `;
+            
+            const blob = new Blob([html], { type: 'text/html' });
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            throw new Error(\`Alps2dot generation failed: \${error.message}\`);
+        }
+    }
+
+    convertAlpsToDot(content, fileType) {
+        console.log('convertAlpsToDot called with fileType:', fileType);
+        let alpsData;
+        
+        // Parse ALPS content
+        if (fileType === 'JSON') {
+            try {
+                alpsData = JSON.parse(content);
+                console.log('Parsed JSON ALPS data:', alpsData);
+            } catch (e) {
+                console.error('JSON parsing error:', e);
+                throw new Error('Invalid JSON format: ' + e.message);
+            }
+        } else {
+            // Parse XML to extract ALPS data
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(content, 'text/xml');
+                console.log('Parsed XML document:', xmlDoc);
+                alpsData = this.xmlToAlpsObject(xmlDoc);
+                console.log('Converted to ALPS data:', alpsData);
+            } catch (e) {
+                console.error('XML parsing error:', e);
+                throw new Error('Invalid XML format: ' + e.message);
+            }
+        }
+        
+        const dotResult = this.generateDotFromAlps(alpsData);
+        console.log('Generated DOT result:', dotResult);
+        return dotResult;
+    }
+
+    xmlToAlpsObject(xmlDoc) {
+        const alpsElement = xmlDoc.documentElement;
+        const descriptors = [];
+        
+        // Extract only top-level descriptors from XML
+        const descriptorElements = xmlDoc.querySelectorAll('alps > descriptor');
+        descriptorElements.forEach(desc => {
+            const descriptor = {
+                id: desc.getAttribute('id'),
+                title: desc.getAttribute('title') || desc.getAttribute('id'),
+                type: desc.getAttribute('type'),
+                rt: desc.getAttribute('rt'),
+                tag: desc.getAttribute('tag'),
+                def: desc.getAttribute('def') // Schema.org definition indicates ontology
+            };
+            
+            // Extract nested descriptors (href references) - only direct children
+            const nestedDescs = Array.from(desc.children).filter(child => child.tagName === 'descriptor');
+            if (nestedDescs.length > 0) {
+                descriptor.descriptor = [];
+                nestedDescs.forEach(nested => {
+                    descriptor.descriptor.push({
+                        href: nested.getAttribute('href'),
+                        id: nested.getAttribute('id')
+                    });
+                });
+            }
+            
+            descriptors.push(descriptor);
+        });
+        
+        return {
+            alps: {
+                title: xmlDoc.querySelector('title')?.textContent || 'ALPS Diagram',
+                descriptor: descriptors
+            }
+        };
+    }
+
+    generateDotFromAlps(alpsData) {
+        const descriptors = alpsData.alps?.descriptor || [];
+        
+        // Separate states and transitions (exclude ontology descriptors)
+        const states = descriptors.filter(d => 
+            d.tag === 'collection' || d.tag === 'item' || 
+            (d.id && !d.type && !d.rt && !d.def && d.descriptor && d.descriptor.length > 0)
+        );
+        const transitions = descriptors.filter(d => d.type && d.rt);
+        
+        console.log('States found:', states.map(s => s.id));
+        console.log('Transitions found:', transitions.map(t => t.id));
+        
+        let dot = \`digraph application_state_diagram {
+    graph [
+        labelloc="t";
+        fontname="Helvetica"
+    ];
+    node [shape = box, style = "bold,filled" fillcolor="lightgray", margin="0.3,0.1"];
+
+\`;
+
+        // Add state nodes
+        states.forEach(state => {
+            if (state.id) {
+                dot += \`    \${state.id} [margin=0.1, label="\${state.title || state.id}", shape=box, URL="#\${state.id}" target="_parent"]\\n\`;
+            }
+        });
+
+        dot += '\\n';
+
+        // Add transitions
+        transitions.forEach(trans => {
+            if (trans.id && trans.rt) {
+                const targetState = trans.rt.replace('#', '');
+                const sourceStates = this.findSourceStatesForTransition(trans.id, descriptors);
+                
+                sourceStates.forEach(sourceState => {
+                    const color = this.getTransitionColor(trans.type);
+                    const symbol = this.getTransitionSymbol(trans.type);
+                    
+                    dot += \`    \${sourceState} -> \${targetState} [label=<<table border="0" cellborder="0" cellspacing="0" cellpadding="0"><tr><td valign="middle" href="#\${trans.id}" tooltip="\${trans.title || trans.id} (\${trans.type})"><font color="\${color}">\${symbol}</font> \${trans.id}</td></tr></table>> URL="#\${trans.id}" target="_parent" fontsize=13 class="\${trans.id}" penwidth=1.5];\\n\`;
+                });
+            }
+        });
+
+        dot += '\\n';
+
+        // Add basic state nodes again (for compatibility)
+        states.forEach(state => {
+            if (state.id) {
+                dot += \`    \${state.id} [label="\${state.title || state.id}" URL="#\${state.id}" target="_parent"]\\n\`;
+            }
+        });
+
+        dot += '\\n}';
+        
+        return dot;
+    }
+
+    findSourceStatesForTransition(transitionId, descriptors) {
+        const sources = [];
+        descriptors.forEach(desc => {
+            if (desc.descriptor && Array.isArray(desc.descriptor)) {
+                const hasTransition = desc.descriptor.some(nested => 
+                    nested.href === \`#\${transitionId}\` || nested.id === transitionId
+                );
+                if (hasTransition && desc.id) {
+                    sources.push(desc.id);
+                }
+            }
+        });
+        return sources.length > 0 ? sources : ['UnknownState'];
+    }
+
+    getTransitionColor(type) {
+        switch (type) {
+            case 'safe': return '#00A86B';
+            case 'unsafe': return '#FF4136';
+            case 'idempotent': return '#FFDC00';
+            default: return '#000000';
+        }
+    }
+
+    getTransitionSymbol(type) {
+        switch (type) {
+            case 'safe': return '■';
+            case 'unsafe': return '■';
+            case 'idempotent': return '■';
+            default: return '■';
+        }
+    }
+}
+
+// Diagram Adapter Manager (simplified)
+class DiagramAdapterManager {
+    constructor() {
+        this.adapters = {
+            'alps2dot': new Alps2DotAdapter()
+        };
+        this.currentAdapter = 'alps2dot';
+    }
+
+    getCurrentAdapter() {
+        return this.adapters[this.currentAdapter];
+    }
+
+    async generateDiagram(content, fileType) {
+        const adapter = this.getCurrentAdapter();
+        return await adapter.generate(content, fileType);
+    }
+}
+
+// Main ALPS Editor (simplified for local mode)
+class AlpsEditor {
+    constructor() {
+        this.editor = null;
+        this.debounceTimer = null;
+        this.alpsSchema = null;
+        this.ajv = new Ajv({ allErrors: true, verbose: true });
+        this.customAnnotations = [];
+        this.isDebugMode = false;
+        this.adapterManager = new DiagramAdapterManager();
+        this.isLocalMode = true; // Always local mode for this version
+        this.SKELETON_SNIPPETS = [
+            {
+                caption: 'ALPS XML Skeleton',
+                snippet: \`<?xml version="1.0" encoding="UTF-8"?>
+<alps version="1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
+    <title>\\\${1:Profile Title}</title>
+    <doc>\\\${2:}</doc>
+    \\\${3}
+</alps>\`,
+                meta: 'XML',
+                type: 'snippet',
+                score: 1000
+            }
+        ];
+        this.init();
+    }
+
+    async init() {
+        document.addEventListener('DOMContentLoaded', async () => {
+            this.editor = ace.edit("editor");
+            this.editor.setTheme("ace/theme/github");
+            this.configureAceEditor();
+            await this.loadDefaultXml();
+            await this.setupCompletion();
+            this.setupSaveShortcut();
+            this.setupDragAndDrop();
+            this.setupDownloadButton();
+        });
+    }
+
+    configureAceEditor() {
+        ace.require("ace/ext/language_tools");
+        this.editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+        });
+    }
+
+    async loadDefaultXml() {
+        try {
+            // ローカルモード用のデフォルトXML
+            const defaultXml = \`<?xml version="1.0" encoding="UTF-8"?>
+<alps xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
+    <title>ALPS Sample Profile</title>
+    <doc>A simple ALPS profile for demonstration purposes</doc>
+    
+    <!-- Ontology -->
+    <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
+    <descriptor id="name" def="https://schema.org/name" title="name"/>
+    <descriptor id="description" def="https://schema.org/description" title="description"/>
+    
+    <!-- Taxonomy -->
+    <descriptor id="ProductList" title="Product List" tag="collection">
+        <descriptor href="#name"/>
+        <descriptor href="#goProductDetail"/>
+    </descriptor>
+    
+    <descriptor id="ProductDetail" title="Product Detail" tag="item">
+        <descriptor href="#id"/>
+        <descriptor href="#name"/>
+        <descriptor href="#description"/>
+        <descriptor href="#goProductList"/>
+    </descriptor>
+    
+    <!-- Choreography -->
+    <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list"/>
+    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
+        <descriptor href="#id"/>
+    </descriptor>
+</alps>\`;
+            
+            this.editor.setValue(defaultXml);
+            this.editor.getSession().setMode("ace/mode/xml");
+        } catch (error) {
+            this.handleError(error, 'Failed to load default XML');
+        }
+    }
+
+    async setupCompletion() {
+        try {
+            // ローカルモード用の簡易スキーマ
+            this.alpsSchema = {
+                type: "object",
+                properties: {
+                    alps: {
+                        type: "object",
+                        properties: {
+                            version: { type: "string" },
+                            title: { type: "string" },
+                            doc: { type: ["string", "object"] },
+                            descriptor: {
+                                type: "array",
+                                items: { type: "object" }
+                            }
+                        }
+                    }
+                }
+            };
+        } catch (error) {
+            this.handleError(error, 'Failed to load ALPS schema');
+        }
+
+        const originalSetAnnotations = this.editor.getSession().setAnnotations.bind(this.editor.getSession());
+        this.editor.getSession().setAnnotations = (annotations) => {
+            const combinedAnnotations = (annotations || []).concat(this.customAnnotations);
+            originalSetAnnotations(combinedAnnotations);
+        };
+
+        this.editor.getSession().on('change', () => {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => this.validateAndPreview(), 300);
+        });
+
+        this.validateAndPreview();
+    }
+
+    detectFileType(content) {
+        content = content.trim();
+        if (content.startsWith('{') || content.startsWith('[')) return 'JSON';
+        if (content.startsWith('<')) return 'XML';
+        return 'Unknown';
+    }
+
+    async validateAndPreview() {
+        const content = this.editor.getValue();
+        const fileType = this.detectFileType(content);
+        document.getElementById('fileTypeDisplay').textContent = fileType;
+
+        let validationResult;
+        if (fileType === 'JSON') {
+            this.editor.getSession().setMode('ace/mode/json');
+            validationResult = this.validateJson(content);
+        } else if (fileType === 'XML') {
+            this.editor.getSession().setMode('ace/mode/xml');
+            validationResult = this.validateXml(content);
+        } else {
+            validationResult = { isValid: false, errors: [{ row: 0, column: 0, text: 'Unknown file type', type: 'error' }] };
+        }
+
+        if (validationResult.isValid) {
+            await this.updatePreview(content, fileType);
+        } else {
+            this.updateValidationMark(false);
+            this.displayErrors(validationResult.errors);
+        }
+
+        this.editor.getSession().setAnnotations(validationResult.errors);
+    }
+
+    async updatePreview(content, fileType) {
+        try {
+            // Use the adapter manager to generate diagram
+            const url = await this.adapterManager.generateDiagram(content, fileType);
+            
+            document.getElementById('preview-frame').src = url;
+            this.updateValidationMark(true);
+            this.displayErrors([]);
+            
+        } catch (error) {
+            this.handleError(error, 'Diagram generation failed');
+            this.updateValidationMark(false);
+            const apiErrors = [{
+                row: 0,
+                column: 0,
+                text: 'Diagram generation failed: ' + error.message,
+                type: 'error'
+            }];
+            this.displayErrors(apiErrors);
+        }
+    }
+
+    validateJson(content) {
+        try {
+            const data = JSON.parse(content);
+            const validate = this.ajv.compile(this.alpsSchema);
+            if (!validate(data)) {
+                const errors = validate.errors.map(error => ({
+                    row: 0,
+                    column: 0,
+                    text: \`Schema Error: \${error.message}\`,
+                    type: 'error'
+                }));
+                return { isValid: false, errors };
+            }
+            return { isValid: true, errors: [] };
+        } catch (error) {
+            return {
+                isValid: false,
+                errors: [{ row: 0, column: 0, text: \`JSON Parse Error: \${error.message}\`, type: 'error' }]
+            };
+        }
+    }
+
+    validateXml(content) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(content, 'text/xml');
+        const parseError = xmlDoc.getElementsByTagName('parsererror')[0];
+
+        if (parseError) {
+            const errorMessage = parseError.textContent || "Unknown XML parse error";
+            const lineMatch = errorMessage.match(/line (\\d+)/);
+            const columnMatch = errorMessage.match(/column (\\d+)/);
+            const line = lineMatch ? parseInt(lineMatch[1], 10) - 1 : 0;
+            const column = columnMatch ? parseInt(columnMatch[1], 10) - 1 : 0;
+
+            return {
+                isValid: false,
+                errors: [{ row: line, column: column, text: \`XML Parse Error: \${errorMessage}\`, type: 'error' }]
+            };
+        }
+        return { isValid: true, errors: [] };
+    }
+
+    updateValidationMark(isValid) {
+        document.getElementById('validationMark').textContent = isValid ? '✅' : '❌';
+    }
+
+    displayErrors(errors) {
+        const errorContainer = document.getElementById('error-container');
+        if (!errors.length) {
+            errorContainer.style.display = 'none';
+            return;
+        }
+
+        errorContainer.innerHTML = \`
+            <div class="error-title">Errors</div>
+            \${errors.map(error => \`
+                <div class="error-message">\${error.text}</div>
+                <div class="error-location">Line: \${error.row + 1}, Column: \${error.column + 1}</div>
+            \`).join('')}
+        \`;
+        errorContainer.style.display = 'block';
+    }
+
+    setupSaveShortcut() {
+        document.addEventListener('keydown', (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+                event.preventDefault();
+                document.getElementById('downloadBtn').click();
+            }
+        });
+    }
+
+    setupDragAndDrop() {
+        const dropArea = document.getElementById('editor-container');
+        dropArea.addEventListener('dragover', (event) => event.preventDefault());
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let content = e.target.result;
+                    this.editor.setValue(content);
+                    this.validateAndPreview();
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    setupDownloadButton() {
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const content = this.editor.getValue();
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'alps-profile.xml';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    handleError(error, message) {
+        console.error(message, error);
+    }
+}
+
+// Initialize the editor
+new AlpsEditor();
+</script>
+</body>
+</html>

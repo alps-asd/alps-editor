@@ -11,6 +11,10 @@ ALPS Online Editor is a web-based editor for creating and editing Application-Le
 
 Visit [app-state-diagram.com](https://app-state-diagram.com) to use the editor directly in your browser.
 
+### Static Version (GitHub Pages)
+
+Try the static version at [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) - no server required, works entirely in your browser with client-side diagram generation.
+
 ### Offline Usage
 
 #### Prerequisites
@@ -41,7 +45,13 @@ composer serve
 
 ## Features
 
-### Smart Auto-Completion
+### 🎯 Interactive Diagram Experience
+- **Bidirectional highlighting**: Select text in editor → elements glow in diagram
+- **Click-to-jump navigation**: Click diagram elements → jump to code line
+- **Dual rendering modes**: Switch between Document (ASD) and Diagram (SVG) views
+- **Real-time visual feedback**: Instant synchronization between editor and diagrams
+
+### 🎨 Smart Auto-Completion
 - Press `Ctrl + Space` to show context-aware snippets
 - When starting from scratch:
     1. Clear the editor content
@@ -49,19 +59,19 @@ composer serve
     3. Choose either "ALPS XML Skeleton" or "ALPS JSON Skeleton"
     4. Fill in the placeholders using `Tab`
 
-### Real-Time Validation
+### ✅ Real-Time Validation
 - Automatic validation against ALPS schema
 - Immediate visual feedback on errors
 - Detailed error messages with line numbers
 - Live preview of the rendered ALPS document
 
-### File Management
+### 📁 File Management
 - Support for both XML and JSON ALPS formats
 - Drag and drop ALPS files directly into the editor
 - Accepts JSON, XML, and HTML files containing ALPS profiles
 - Quick save with `Ctrl + S` (or `Cmd + S` on Mac)
 
-### Smart Suggestions
+### 💡 Smart Suggestions
 - Context-aware descriptor completions
 - Automatic href suggestions from existing descriptors
 - Built-in semantic terms from Schema.org
@@ -99,6 +109,12 @@ composer serve
 - `Ctrl + S` / `Cmd + S`: Save document
 - `Tab`: Navigate through snippet placeholders
 - `Shift + Tab`: Navigate backwards through placeholders
+
+## Interactive Features
+
+- **Text selection**: Select any text in the editor to highlight corresponding elements in the diagram
+- **Click navigation**: Click on any element in the diagram to jump to its definition in the editor
+- **Mode switching**: Use the dropdown to switch between Document (server-generated) and Diagram (client-generated) views
 
 ## Validation
 
