@@ -68,6 +68,8 @@ class AlpsEditor {
             this.setupCompleteHref();
             this.setupDownloadButton();
             this.setupAdapterSelector();
+            this.setupDiagramClickHandler();
+            this.setupEditorSelectionHandler();
         });
     }
 
@@ -777,6 +779,85 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                 callback(null, completions);
             },
         };
+    }
+
+    setupDiagramClickHandler() {
+        // Listen for messages from iframe diagram
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'jumpToId') {
+                const id = event.data.id;
+                console.log('Jumping to ID:', id);
+                this.jumpToId(id);
+            }
+        });
+    }
+
+    jumpToId(id) {
+        if (!this.editor || !id) return;
+        
+        // Search for id="searchId" in the editor content
+        const searchTerm = `id="${id}"`;
+        console.log('Searching for:', searchTerm);
+        
+        // Find the text first
+        const range = this.editor.find(searchTerm, {
+            backwards: false,
+            wrap: true,
+            caseSensitive: true,
+            wholeWord: false,
+            regExp: false
+        });
+        
+        if (range) {
+            // Get the line number where the match was found
+            const lineNumber = range.start.row;
+            
+            // Select the entire line
+            this.editor.selection.selectLine();
+            
+            console.log('Selected entire line:', lineNumber);
+        }
+        
+        // Focus the editor after search
+        this.editor.focus();
+    }
+
+    setupEditorSelectionHandler() {
+        if (!this.editor) return;
+
+        // Listen for selection changes in the editor
+        this.editor.on('changeSelection', () => {
+            const selectedText = this.editor.getSelectedText();
+            if (selectedText) {
+                console.log('Selected text:', selectedText);
+                this.highlightInDiagram(selectedText);
+            } else {
+                // Clear highlights when no selection
+                this.clearDiagramHighlights();
+            }
+        });
+    }
+
+    highlightInDiagram(selectedText) {
+        // Send message to diagram iframe to highlight elements
+        const previewFrame = document.getElementById('preview-frame');
+        if (previewFrame && previewFrame.contentWindow) {
+            previewFrame.contentWindow.postMessage({
+                type: 'highlightElement',
+                text: selectedText
+            }, '*');
+            console.log('Sent highlight message to diagram:', selectedText);
+        }
+    }
+
+    clearDiagramHighlights() {
+        // Send message to diagram iframe to clear highlights
+        const previewFrame = document.getElementById('preview-frame');
+        if (previewFrame && previewFrame.contentWindow) {
+            previewFrame.contentWindow.postMessage({
+                type: 'clearHighlights'
+            }, '*');
+        }
     }
 }
 

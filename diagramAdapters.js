@@ -51,7 +51,142 @@ class AsdAdapter extends DiagramAdapter {
                 #asd-graph-name { 
                     display: none; 
                 }
+                .highlighted {
+                    filter: drop-shadow(0 0 8px #ff6b35) !important;
+                    opacity: 0.8 !important;
+                }
                 </style>
+                <script>
+                // Listen for highlight messages from parent window (same as Diagram version)
+                window.addEventListener('message', function(event) {
+                    if (event.data) {
+                        if (event.data.type === 'highlightElement') {
+                            highlightElementInASD(event.data.text);
+                        } else if (event.data.type === 'clearHighlights') {
+                            clearHighlightsInASD();
+                        }
+                    }
+                });
+                
+                function highlightElementInASD(text) {
+                    console.log('ASD: Highlighting element containing:', text);
+                    
+                    // Clear previous highlights
+                    clearHighlightsInASD();
+                    
+                    // More selective approach: look for exact or close matches only
+                    // 1. First try exact ID matches
+                    const exactIdElements = document.querySelectorAll('[id="' + text + '"]');
+                    if (exactIdElements.length > 0) {
+                        exactIdElements.forEach(element => {
+                            element.classList.add('highlighted');
+                            console.log('ASD: Highlighted exact ID match:', element);
+                        });
+                        return; // Found exact matches, stop here
+                    }
+                    
+                    // 2. Look for text content that contains the selection as a complete word
+                    const textElements = document.querySelectorAll('span, td, th, div, p, a');
+                    textElements.forEach(element => {
+                        const textContent = element.textContent || '';
+                        const id = element.id || '';
+                        
+                        // Only highlight if:
+                        // - Text exactly matches selection
+                        // - ID exactly matches selection  
+                        // - Text contains selection as complete word (not partial)
+                        const isExactTextMatch = textContent.trim() === text.trim();
+                        const isExactIdMatch = id === text;
+                        const isCompleteWordMatch = textContent.toLowerCase().includes(' ' + text.toLowerCase() + ' ') ||
+                                                  textContent.toLowerCase().startsWith(text.toLowerCase() + ' ') ||
+                                                  textContent.toLowerCase().endsWith(' ' + text.toLowerCase()) ||
+                                                  textContent.toLowerCase() === text.toLowerCase();
+                        
+                        if (isExactTextMatch || isExactIdMatch || isCompleteWordMatch) {
+                            element.classList.add('highlighted');
+                            console.log('ASD: Highlighted selective match:', element, 'reason:', 
+                                      isExactTextMatch ? 'exact text' : 
+                                      isExactIdMatch ? 'exact ID' : 'complete word');
+                        }
+                    });
+                    
+                    // 3. Check SVG elements within ASD (more selective)
+                    const svgElements = document.querySelectorAll('svg text, svg title');
+                    svgElements.forEach(element => {
+                        const textContent = element.textContent || '';
+                        
+                        // Only highlight SVG elements with exact text matches or complete word matches
+                        const isExactMatch = textContent.trim() === text.trim();
+                        const isCompleteWordMatch = textContent.toLowerCase().includes(' ' + text.toLowerCase() + ' ') ||
+                                                  textContent.toLowerCase().startsWith(text.toLowerCase() + ' ') ||
+                                                  textContent.toLowerCase().endsWith(' ' + text.toLowerCase()) ||
+                                                  textContent.toLowerCase() === text.toLowerCase();
+                        
+                        if (isExactMatch || isCompleteWordMatch) {
+                            let parentGroup = element.closest('g') || element;
+                            parentGroup.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                            parentGroup.style.opacity = '0.8';
+                            parentGroup.classList.add('highlighted');
+                            console.log('ASD: Highlighted SVG element:', element, 'text:', textContent);
+                        }
+                    });
+                }
+                
+                function clearHighlightsInASD() {
+                    // Clear CSS class highlights
+                    const highlighted = document.querySelectorAll('.highlighted');
+                    highlighted.forEach(element => {
+                        element.classList.remove('highlighted');
+                        element.style.filter = '';
+                        element.style.opacity = '';
+                    });
+                }
+                
+                // Add Ctrl+Click functionality for documentation links
+                document.addEventListener('click', function(e) {
+                    if (e.ctrlKey || e.metaKey) { // Ctrl on Windows/Linux, Cmd on Mac
+                        const link = e.target.closest('a');
+                        if (link && link.href) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Open in new tab/window
+                            window.open(link.href, '_blank', 'noopener,noreferrer');
+                            console.log('Ctrl+Click: Opened link in new tab:', link.href);
+                        }
+                    }
+                });
+                
+                // Add click-to-jump functionality for ASD elements (same as Diagram version)
+                document.addEventListener('click', function(e) {
+                    // Skip if Ctrl+Click (handled above)
+                    if (e.ctrlKey || e.metaKey) return;
+                    
+                    const clickedElement = e.target;
+                    let targetId = null;
+                    
+                    // Try to extract ID from various sources
+                    if (clickedElement.id) {
+                        targetId = clickedElement.id;
+                    } else if (clickedElement.textContent) {
+                        // Look for ALPS identifiers in the text content
+                        const text = clickedElement.textContent.trim();
+                        // Simple heuristic: if it looks like an identifier, use it
+                        if (text.match(/^[a-zA-Z][a-zA-Z0-9]*$/)) {
+                            targetId = text;
+                        }
+                    }
+                    
+                    if (targetId && window.parent !== window) {
+                        // Send message to parent window to search for this ID in the editor
+                        window.parent.postMessage({
+                            type: 'jumpToId',
+                            id: targetId
+                        }, '*');
+                        console.log('ASD: Click-to-jump message sent for:', targetId);
+                    }
+                });
+                </script>
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const showIdRadio = document.getElementById('asd-show-id');
@@ -130,178 +265,225 @@ class Alps2DotAdapter extends DiagramAdapter {
         try {
             console.log('Alps2DotAdapter.generate called with:', { content: content.substring(0, 200) + '...', fileType });
 
-            // Generate DOT content using simple ALPS to DOT conversion
-            const dotContent = this.convertAlpsToDot(content, fileType);
+            // Parse ALPS data first
+            const alpsData = this.parseAlpsData(content, fileType);
+            
+            // Generate DOT content using parsed ALPS data
+            const dotContent = this.generateDotFromAlps(alpsData);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
 
-            // Try rendering in the parent context first using @hpcc-js/wasm to avoid iframe dependency timing
-            const ensureHpccInParent = () => new Promise((resolve) => {
-                if (window["@hpcc-js/wasm"]) {
-                    resolve(true);
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js';
-                script.onload = () => resolve(true);
-                script.onerror = () => resolve(false);
-                document.head.appendChild(script);
-            });
-
-            try {
-                const ok = await ensureHpccInParent();
-                let wasm = window["@hpcc-js/wasm"];
-                for (let i = 0; i < 50 && (!wasm || !wasm.graphviz || typeof wasm.graphviz.layout !== 'function'); i++) {
-                    await new Promise(r => setTimeout(r, 100));
-                    wasm = window["@hpcc-js/wasm"];
-                }
-                if (ok && wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function') {
-                    const svg = await wasm.graphviz.layout(dotContent, 'svg', 'dot');
-                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
-<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;}</style>
-</head><body><div class="container">${svg}</div></body></html>`;
-                    const blob = new Blob([html], { type: 'text/html' });
-                    return URL.createObjectURL(blob);
-                }
-            } catch (e) {
-                console.warn('Parent-context Graphviz render failed; falling back to iframe loader.', e);
+            // Wait for Viz.js to be available in main page context
+            console.log('Checking Viz.js availability...');
+            let viz = window.Viz;
+            for (let i = 0; i < 50 && (!viz || typeof viz !== 'function'); i++) {
+                await new Promise(r => setTimeout(r, 100));
+                viz = window.Viz;
+                console.log(`Attempt ${i + 1}: Viz available = ${typeof viz}`);
             }
 
-            // Fallback: render inside iframe HTML (kept for environments where parent loading is blocked)
-            const dotJson = JSON.stringify(dotContent);
-            const html = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>ALPS Diagram (alps2dot + Graphviz)</title>
-                        <script src="https://d3js.org/d3.v7.min.js"></script>
-                        <script src="https://unpkg.com/@hpcc-js/wasm@2.21.0/dist/graphviz.umd.js"></script>
-                        <script src="https://unpkg.com/d3-graphviz@5.6.0/build/d3-graphviz.min.js"></script>
-                        <style>
-                            body { 
-                                margin: 0; 
-                                padding: 20px; 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                background: #f8f9fa;
-                            }
-                            .container {
-                                background: white;
-                                border-radius: 8px;
-                                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                                padding: 20px;
-                                min-height: 400px;
-                            }
-                            .info {
-                                position: fixed;
-                                top: 10px;
-                                right: 10px;
-                                background: rgba(52, 152, 219, 0.9);
-                                color: white;
-                                padding: 8px 12px;
-                                border-radius: 4px;
-                                font-size: 12px;
-                                font-weight: 500;
-                                z-index: 1000;
-                            }
-                            .loading {
-                                color: #666;
-                                text-align: center;
-                                padding: 40px 20px;
-                            }
-                            #graphviz-output {
-                                text-align: center;
-                                margin-top: 20px;
-                            }
-                            #graphviz-output svg {
-                                max-width: 100%;
-                                height: auto;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div id="graphviz-output">
-                                <div class="loading">Loading Graphviz WASM...</div>
-                            </div>
-                        </div>
-                        
-                        <script>
-                            // Auto-render when page loads
-                            document.addEventListener('DOMContentLoaded', function() {
-                                tryGraphvizRender();
-                            });
+            if (viz && typeof viz === 'function') {
+                console.log('Main page: Using pre-loaded Viz.js to generate SVG...');
+                try {
+                    const vizInstance = new viz();
+                    const svgString = await vizInstance.renderString(dotContent, { format: 'svg' });
+                    console.log('Main page: SVG generated successfully');
+                    
+                    // Create relationship data for highlighting
+                    const relationships = this.buildRelationshipMap(alpsData);
+                    
+                    // Return the SVG directly as data URL for iframe-less display
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;} a{cursor:pointer;}</style>
+<script>
+// ALPS relationship data for parent-child highlighting
+window.alpsRelationships = ${JSON.stringify(relationships).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')};
+console.log('Loaded relationships:', window.alpsRelationships);
 
-                            // Also try immediately if DOM is already loaded
-                            if (document.readyState !== 'loading') {
-                                tryGraphvizRender();
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to all SVG elements with href="#something"
+    const svgLinks = document.querySelectorAll('svg a[href^="#"], svg a[*|href^="#"]');
+    console.log('Found SVG links:', svgLinks.length);
+    
+    svgLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('SVG link clicked:', this);
+            
+            const href = this.getAttribute('href') || this.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            if (href && href.startsWith('#')) {
+                const id = href.substring(1);
+                console.log('Extracted ID:', id);
+                
+                if (window.parent !== window) {
+                    // Send message to parent window to search for this ID in the editor
+                    window.parent.postMessage({
+                        type: 'jumpToId',
+                        id: id
+                    }, '*');
+                    console.log('Message sent to parent');
+                }
+            }
+        });
+    });
+    
+    // Listen for highlight messages from parent window
+    window.addEventListener('message', function(event) {
+        if (event.data) {
+            if (event.data.type === 'highlightElement') {
+                highlightElementInSVG(event.data.text);
+            } else if (event.data.type === 'clearHighlights') {
+                clearHighlightsInSVG();
+            }
+        }
+    });
+    
+    function highlightElementInSVG(text) {
+        console.log('Highlighting in SVG:', text);
+        
+        // Clear previous highlights
+        clearHighlightsInSVG();
+        
+        // Simple debug
+        console.log('Highlighting text:', text);
+        
+        // Find SVG elements that contain this text (partial matching)
+        const svgElements = document.querySelectorAll('svg text, svg title');
+        svgElements.forEach(element => {
+            if (element.textContent && element.textContent.toLowerCase().includes(text.toLowerCase())) {
+                // Find the parent group or shape to highlight
+                let parentShape = element.closest('g');
+                if (parentShape) {
+                    parentShape.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                    parentShape.style.opacity = '0.8';
+                    parentShape.classList.add('highlighted');
+                    console.log('Highlighted text element:', parentShape, 'contains:', text);
+                }
+            }
+        });
+        
+        // Find by partial ID/class match (case-insensitive)
+        const allElements = document.querySelectorAll('svg [id], svg [class]');
+        allElements.forEach(element => {
+            const id = element.getAttribute('id') || '';
+            const className = element.getAttribute('class') || '';
+            
+            if (id.toLowerCase().includes(text.toLowerCase()) || 
+                className.toLowerCase().includes(text.toLowerCase())) {
+                element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                element.style.opacity = '0.8';
+                element.classList.add('highlighted');
+                console.log('Highlighted partial match:', element, 'matches:', text);
+            }
+        });
+        
+        // Also search in href attributes and other text content
+        const allTextNodes = document.querySelectorAll('svg *');
+        allTextNodes.forEach(element => {
+            // Check various attributes for partial matches
+            ['href', 'xlink:href', 'data-id'].forEach(attr => {
+                const value = element.getAttribute(attr);
+                if (value && value.toLowerCase().includes(text.toLowerCase())) {
+                    element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                    element.style.opacity = '0.8';
+                    element.classList.add('highlighted');
+                    console.log('Highlighted attribute match:', element, attr, '=', value);
+                }
+            });
+        });
+        
+        // STRUCTURAL RELATIONSHIP MATCHING using ALPS hierarchy
+        console.log('Using ALPS relationships for:', text);
+        
+        if (window.alpsRelationships) {
+            const relationships = window.alpsRelationships;
+            
+            // If this text is a child element, highlight its parents
+            if (relationships.parentOf[text]) {
+                relationships.parentOf[text].forEach(parentId => {
+                    console.log('Highlighting parent:', parentId, 'contains child:', text);
+                    
+                    // Find SVG elements with this parent ID
+                    document.querySelectorAll('svg text').forEach(textEl => {
+                        if (textEl.textContent && textEl.textContent.trim() === parentId) {
+                            let parentGroup = textEl.closest('g');
+                            if (parentGroup) {
+                                parentGroup.style.filter = 'drop-shadow(0 0 6px #35a3ff)'; // Blue for parents
+                                parentGroup.style.opacity = '0.9';
+                                parentGroup.classList.add('highlighted');
+                                console.log('✓ Highlighted parent element:', parentId);
                             }
-                            
-                            function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-                            async function tryGraphvizRender() {
-                                const outputDiv = document.getElementById('graphviz-output');
-                                if (!outputDiv) {
-                                    setTimeout(tryGraphvizRender, 100);
-                                    return;
-                                }
-                                
-                                try {
-                                    // Create a div for d3-graphviz
-                                    outputDiv.innerHTML = '<div id="graph"></div>';
-                                    
-                                    // Wait a moment for libraries to be ready
-                                    await new Promise(resolve => setTimeout(resolve, 100));
-                                    
-                                    // Use d3-graphviz like ASD does
-                                    const dot = ${dotJson};
-                                    
-                                    // Wait up to ~5 seconds for dependencies to be present
-                                    const awaitDeps = async () => {
-                                        for (let i = 0; i < 50; i++) {
-                                            const hasD3 = typeof window.d3 !== 'undefined';
-                                            const hasD3Graphviz = hasD3 && typeof window.d3.graphviz === 'function';
-                                            const wasm = window["@hpcc-js/wasm"]; 
-                                            const hasHpcc = wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function';
-                                            if (hasD3Graphviz || hasHpcc) {
-                                                return { hasD3Graphviz, hasHpcc };
-                                            }
-                                            await new Promise(r => setTimeout(r, 100));
-                                        }
-                                        return { hasD3Graphviz: false, hasHpcc: false };
-                                    };
-
-                                    const { hasD3Graphviz, hasHpcc } = await awaitDeps();
-
-                                    if (hasD3Graphviz) {
-                                        // Render using d3-graphviz (same approach as ASD)
-                                        d3.select("#graph")
-                                            .graphviz()
-                                            .renderDot(dot);
-                                    } else if (hasHpcc) {
-                                        // Fallback: render directly with hpcc wasm graphviz
-                                        const svg = await window["@hpcc-js/wasm"].graphviz.layout(dot, "svg", "dot");
-                                        outputDiv.innerHTML = svg;
-                                    } else {
-                                        throw new Error('Failed to load Graphviz dependencies: d3-graphviz not available after loading');
-                                    }
-                                    
-                                } catch (error) {
-                                    console.error('Graphviz rendering error:', error);
-                                    outputDiv.innerHTML = \`
-                                        <div style=\"color: #dc3545; padding: 20px; text-align: left;\">
-                                            <strong>Diagram rendering failed:</strong><br>
-                                            \${error.message}<br><br>
-                                            <details>
-                                                <summary>View DOT source</summary>
-                                                <pre style=\"background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;\">\${escapeHtml(dot)}</pre>
-                                            </details>
-                                        </div>
-                                    \`;
-                                }
+                        }
+                    });
+                });
+            }
+            
+            // If this text is a parent element, highlight its children  
+            if (relationships.childrenOf[text]) {
+                relationships.childrenOf[text].forEach(childId => {
+                    console.log('Highlighting child:', childId, 'of parent:', text);
+                    
+                    // Find SVG elements with this child ID
+                    document.querySelectorAll('svg text').forEach(textEl => {
+                        if (textEl.textContent && (textEl.textContent.trim() === childId || textEl.textContent.includes(childId))) {
+                            let parentGroup = textEl.closest('g');
+                            if (parentGroup) {
+                                parentGroup.style.filter = 'drop-shadow(0 0 6px #00ff88)'; // Green for children
+                                parentGroup.style.opacity = '0.9';
+                                parentGroup.classList.add('highlighted');
+                                console.log('✓ Highlighted child element:', childId);
                             }
-                        </script>
-                    </body>
-                    </html>
-                `;
+                        }
+                    });
+                });
+            }
+        }
+    }
+    
+    function clearHighlightsInSVG() {
+        const highlighted = document.querySelectorAll('.highlighted');
+        highlighted.forEach(element => {
+            element.style.filter = '';
+            element.style.opacity = '';
+            element.classList.remove('highlighted');
+        });
+    }
+    
+    // Also try with regular click event on the whole document
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'a' || e.target.closest('a')) {
+            const link = e.target.tagName === 'a' ? e.target : e.target.closest('a');
+            const href = link.getAttribute('href') || link.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = href.substring(1);
+                console.log('Document click - extracted ID:', id);
+                
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'jumpToId',
+                        id: id
+                    }, '*');
+                }
+            }
+        }
+    });
+});
+</script>
+</head><body><div class="container">${svgString}</div></body></html>`;
+                    const blob = new Blob([html], { type: 'text/html' });
+                    return URL.createObjectURL(blob);
+                } catch (vizError) {
+                    console.error('Viz.js rendering error:', vizError);
+                    throw new Error(`Viz.js rendering failed: ${vizError.message}`);
+                }
+            }
 
+            // Fallback: show error message
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram - Error</title>
+<style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;} .error{color:#dc3545;}</style>
+</head><body><div class="container"><div class="error"><strong>Diagram generation failed:</strong><br>Viz.js library not available after 5 seconds. Check network connection and try refreshing the page.</div></div></body></html>`;
             const blob = new Blob([html], { type: 'text/html' });
             return URL.createObjectURL(blob);
         } catch (error) {
@@ -309,8 +491,8 @@ class Alps2DotAdapter extends DiagramAdapter {
         }
     }
 
-    convertAlpsToDot(content, fileType) {
-        console.log('convertAlpsToDot called with fileType:', fileType);
+    parseAlpsData(content, fileType) {
+        console.log('parseAlpsData called with fileType:', fileType);
         let alpsData;
 
         // Parse ALPS content
@@ -336,9 +518,13 @@ class Alps2DotAdapter extends DiagramAdapter {
             }
         }
 
-        const dotResult = this.generateDotFromAlps(alpsData);
-        console.log('Generated DOT result:', dotResult);
-        return dotResult;
+        return alpsData;
+    }
+
+    convertAlpsToDot(content, fileType) {
+        // This method is now deprecated - use parseAlpsData + generateDotFromAlps instead
+        const alpsData = this.parseAlpsData(content, fileType);
+        return this.generateDotFromAlps(alpsData);
     }
 
     xmlToAlpsObject(xmlDoc) {
@@ -405,7 +591,7 @@ class Alps2DotAdapter extends DiagramAdapter {
         // Add state nodes
         states.forEach(state => {
             if (state.id) {
-                dot += `    ${state.id} [margin=0.1, label="${state.title || state.id}", shape=box, URL="#${state.id}" target="_parent"]\n`;
+                dot += `    ${state.id} [margin=0.1, label="${state.title || state.id}", shape=box, URL="#${state.id}"]\n`;
             }
         });
 
@@ -421,7 +607,8 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const color = this.getTransitionColor(trans.type);
                     const symbol = this.getTransitionSymbol(trans.type);
 
-                    dot += `    ${sourceState} -> ${targetState} [label=<<table border="0" cellborder="0" cellspacing="0" cellpadding="0"><tr><td valign="middle" href="#${trans.id}" tooltip="${trans.title || trans.id} (${trans.type})"><font color="${color}">${symbol}</font> ${trans.id}</td></tr></table>> URL="#${trans.id}" target="_parent" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
+                    // Use colored square emoji + black text (no target to prevent navigation)
+                    dot += `    ${sourceState} -> ${targetState} [label="${symbol} ${trans.id}" URL="#${trans.id}" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
                 });
             }
         });
@@ -431,13 +618,50 @@ class Alps2DotAdapter extends DiagramAdapter {
         // Add basic state nodes again (for compatibility)
         states.forEach(state => {
             if (state.id) {
-                dot += `    ${state.id} [label="${state.title || state.id}" URL="#${state.id}" target="_parent"]\n`;
+                dot += `    ${state.id} [label="${state.title || state.id}" URL="#${state.id}"]\n`;
             }
         });
 
         dot += '\n}';
 
         return dot;
+    }
+
+    buildRelationshipMap(alpsData) {
+        const relationships = {
+            parentOf: {}, // parentOf['name'] = ['ProductList', 'UserProfile'] (parents that contain 'name')
+            childrenOf: {} // childrenOf['ProductList'] = ['name', 'id', 'goCart'] (children of ProductList)
+        };
+        
+        const descriptors = alpsData.alps?.descriptor || [];
+        
+        descriptors.forEach(parent => {
+            if (parent.id && parent.descriptor && Array.isArray(parent.descriptor)) {
+                // Initialize children array for this parent
+                relationships.childrenOf[parent.id] = [];
+                
+                parent.descriptor.forEach(child => {
+                    let childId = child.href || child.id;
+                    if (childId && childId.startsWith('#')) {
+                        childId = childId.substring(1); // Remove #
+                    }
+                    
+                    if (childId) {
+                        // Record parent-child relationship
+                        relationships.childrenOf[parent.id].push(childId);
+                        
+                        // Record child-parent relationship
+                        if (!relationships.parentOf[childId]) {
+                            relationships.parentOf[childId] = [];
+                        }
+                        relationships.parentOf[childId].push(parent.id);
+                    }
+                });
+            }
+        });
+        
+        console.log('Built relationships:', relationships);
+        return relationships;
     }
 
     findSourceStatesForTransition(transitionId, descriptors) {
@@ -465,12 +689,12 @@ class Alps2DotAdapter extends DiagramAdapter {
     }
 
     getTransitionSymbol(type) {
-        // Use consistent square symbol - color differentiation is sufficient
+        // Use large colored square emoji
         switch (type) {
-            case 'safe': return '■';
-            case 'unsafe': return '■';
-            case 'idempotent': return '■';
-            default: return '■';
+            case 'safe': return '🟩';      // Green large square
+            case 'unsafe': return '🟥';    // Red large square
+            case 'idempotent': return '🟨'; // Yellow large square
+            default: return '⬛';         // Black large square
         }
     }
 }
