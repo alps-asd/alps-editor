@@ -135,25 +135,29 @@ class AsdAdapter extends DiagramAdapter {
                     });
                 }
                 
-                // Add Ctrl+Click functionality for documentation links
+                // Add click functionality for external documentation links  
                 document.addEventListener('click', function(e) {
-                    if (e.ctrlKey || e.metaKey) { // Ctrl on Windows/Linux, Cmd on Mac
-                        const link = e.target.closest('a');
-                        if (link && link.href) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            
-                            // Open in new tab/window
-                            window.open(link.href, '_blank', 'noopener,noreferrer');
-                            console.log('Ctrl+Click: Opened link in new tab:', link.href);
-                        }
+                    const link = e.target.closest('a');
+                    if (link && link.href && (link.href.startsWith('http') || link.href.startsWith('https'))) {
+                        // External links open in new tab
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        window.open(link.href, '_blank', 'noopener,noreferrer');
+                        console.log('External link opened in new tab:', link.href);
+                        
+                        // Show a brief visual feedback
+                        link.style.backgroundColor = '#e3f2fd';
+                        setTimeout(() => {
+                            link.style.backgroundColor = '';
+                        }, 200);
+                        return; // Stop here for external links
                     }
                 });
                 
                 // Add click-to-jump functionality for ASD elements (same as Diagram version)
                 document.addEventListener('click', function(e) {
-                    // Skip if Ctrl+Click (handled above)
-                    if (e.ctrlKey || e.metaKey) return;
+                    // Allow normal single clicks for navigation
                     
                     const clickedElement = e.target;
                     let targetId = null;
@@ -442,6 +446,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // SVG diagram double-click → toggle fullscreen diagram
+    let isFullscreenDiagram = false;
+    
+    document.addEventListener('dblclick', function(e) {
+        if (e.target.closest('svg')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isFullscreenDiagram) {
+                // 通常表示に戻る
+                exitFullscreenDiagram();
+            } else {
+                // フルスクリーン表示
+                enterFullscreenDiagram();
+            }
+            isFullscreenDiagram = !isFullscreenDiagram;
+            console.log('Diagram fullscreen toggled:', isFullscreenDiagram);
+        }
+    });
+    
+    function enterFullscreenDiagram() {
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.position = 'fixed';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '100vw';
+            container.style.height = '100vh';
+            container.style.zIndex = '9999';
+            container.style.backgroundColor = '#fff';
+            container.style.padding = '20px';
+            container.style.boxSizing = 'border-box';
+            
+            // Hide other elements
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'setFullscreenDiagram',
+                    fullscreen: true
+                }, '*');
+            }
+        }
+    }
+    
+    function exitFullscreenDiagram() {
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.position = '';
+            container.style.top = '';
+            container.style.left = '';
+            container.style.width = '';
+            container.style.height = '';
+            container.style.zIndex = '';
+            container.style.backgroundColor = '';
+            container.style.padding = '20px';
+            container.style.boxSizing = '';
+            
+            // Show other elements
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'setFullscreenDiagram',
+                    fullscreen: false
+                }, '*');
+            }
+        }
+    }
+
     // Also try with regular click event on the whole document
     document.addEventListener('click', function(e) {
         if (e.target.tagName === 'a' || e.target.closest('a')) {

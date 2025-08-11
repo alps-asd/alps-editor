@@ -51,7 +51,114 @@ class AsdAdapter extends DiagramAdapter {
                 #asd-graph-name { 
                     display: none; 
                 }
+                .highlighted {
+                    filter: drop-shadow(0 0 8px #ff6b35) !important;
+                    opacity: 0.8 !important;
+                }
                 </style>
+                <script>
+                // Listen for highlight messages from parent window (same as Diagram version)
+                window.addEventListener('message', function(event) {
+                    if (event.data) {
+                        if (event.data.type === 'highlightElement') {
+                            highlightElementInASD(event.data.text);
+                        } else if (event.data.type === 'clearHighlights') {
+                            clearHighlightsInASD();
+                        }
+                    }
+                });
+                
+                function highlightElementInASD(text) {
+                    console.log('ASD: Highlighting element containing:', text);
+                    
+                    // Clear previous highlights
+                    clearHighlightsInASD();
+                    
+                    // Find elements in ASD document that contain the search text
+                    const allElements = document.querySelectorAll('*');
+                    allElements.forEach(element => {
+                        const textContent = element.textContent || '';
+                        const id = element.id || '';
+                        const className = element.className || '';
+                        
+                        // Check if element contains the search text
+                        if (textContent.toLowerCase().includes(text.toLowerCase()) ||
+                            id.toLowerCase().includes(text.toLowerCase()) ||
+                            (typeof className === 'string' && className.toLowerCase().includes(text.toLowerCase()))) {
+                            
+                            element.classList.add('highlighted');
+                            console.log('ASD: Highlighted element:', element);
+                        }
+                    });
+                    
+                    // Also check SVG elements within ASD
+                    const svgElements = document.querySelectorAll('svg *');
+                    svgElements.forEach(element => {
+                        const textContent = element.textContent || '';
+                        if (textContent.toLowerCase().includes(text.toLowerCase())) {
+                            let parentGroup = element.closest('g') || element;
+                            parentGroup.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                            parentGroup.style.opacity = '0.8';
+                            parentGroup.classList.add('highlighted');
+                        }
+                    });
+                }
+                
+                function clearHighlightsInASD() {
+                    // Clear CSS class highlights
+                    const highlighted = document.querySelectorAll('.highlighted');
+                    highlighted.forEach(element => {
+                        element.classList.remove('highlighted');
+                        element.style.filter = '';
+                        element.style.opacity = '';
+                    });
+                }
+                
+                // Add Ctrl+Click functionality for documentation links
+                document.addEventListener('click', function(e) {
+                    if (e.ctrlKey || e.metaKey) { // Ctrl on Windows/Linux, Cmd on Mac
+                        const link = e.target.closest('a');
+                        if (link && link.href) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Open in new tab/window
+                            window.open(link.href, '_blank', 'noopener,noreferrer');
+                            console.log('Ctrl+Click: Opened link in new tab:', link.href);
+                        }
+                    }
+                });
+                
+                // Add click-to-jump functionality for ASD elements (same as Diagram version)
+                document.addEventListener('click', function(e) {
+                    // Skip if Ctrl+Click (handled above)
+                    if (e.ctrlKey || e.metaKey) return;
+                    
+                    const clickedElement = e.target;
+                    let targetId = null;
+                    
+                    // Try to extract ID from various sources
+                    if (clickedElement.id) {
+                        targetId = clickedElement.id;
+                    } else if (clickedElement.textContent) {
+                        // Look for ALPS identifiers in the text content
+                        const text = clickedElement.textContent.trim();
+                        // Simple heuristic: if it looks like an identifier, use it
+                        if (text.match(/^[a-zA-Z][a-zA-Z0-9]*$/)) {
+                            targetId = text;
+                        }
+                    }
+                    
+                    if (targetId && window.parent !== window) {
+                        // Send message to parent window to search for this ID in the editor
+                        window.parent.postMessage({
+                            type: 'jumpToId',
+                            id: targetId
+                        }, '*');
+                        console.log('ASD: Click-to-jump message sent for:', targetId);
+                    }
+                });
+                </script>
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const showIdRadio = document.getElementById('asd-show-id');
@@ -130,8 +237,11 @@ class Alps2DotAdapter extends DiagramAdapter {
         try {
             console.log('Alps2DotAdapter.generate called with:', { content: content.substring(0, 200) + '...', fileType });
 
-            // Generate DOT content using simple ALPS to DOT conversion
-            const dotContent = this.convertAlpsToDot(content, fileType);
+            // Parse ALPS data first
+            const alpsData = this.parseAlpsData(content, fileType);
+            
+            // Generate DOT content using parsed ALPS data
+            const dotContent = this.generateDotFromAlps(alpsData);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
 
             // Wait for Viz.js to be available in main page context
@@ -150,10 +260,17 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const svgString = await vizInstance.renderString(dotContent, { format: 'svg' });
                     console.log('Main page: SVG generated successfully');
                     
+                    // Create relationship data for highlighting
+                    const relationships = this.buildRelationshipMap(alpsData);
+                    
                     // Return the SVG directly as data URL for iframe-less display
                     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
 <style>body{margin:0;padding:20px;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif} .container{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px;} a{cursor:pointer;}</style>
 <script>
+// ALPS relationship data for parent-child highlighting
+window.alpsRelationships = ${JSON.stringify(relationships).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')};
+console.log('Loaded relationships:', window.alpsRelationships);
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add click handlers to all SVG elements with href="#something"
     const svgLinks = document.querySelectorAll('svg a[href^="#"], svg a[*|href^="#"]');
@@ -199,29 +316,100 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear previous highlights
         clearHighlightsInSVG();
         
-        // Find SVG elements that contain this text
+        // Simple debug
+        console.log('Highlighting text:', text);
+        
+        // Find SVG elements that contain this text (partial matching)
         const svgElements = document.querySelectorAll('svg text, svg title');
         svgElements.forEach(element => {
-            if (element.textContent && element.textContent.includes(text)) {
+            if (element.textContent && element.textContent.toLowerCase().includes(text.toLowerCase())) {
                 // Find the parent group or shape to highlight
                 let parentShape = element.closest('g');
                 if (parentShape) {
                     parentShape.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
                     parentShape.style.opacity = '0.8';
                     parentShape.classList.add('highlighted');
-                    console.log('Highlighted element:', parentShape);
+                    console.log('Highlighted text element:', parentShape, 'contains:', text);
                 }
             }
         });
         
-        // Also try to find by exact ID match
-        const exactMatches = document.querySelectorAll(\`svg [id*="\${text}"], svg [class*="\${text}"]\`);
-        exactMatches.forEach(element => {
-            element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
-            element.style.opacity = '0.8';
-            element.classList.add('highlighted');
-            console.log('Highlighted exact match:', element);
+        // Find by partial ID/class match (case-insensitive)
+        const allElements = document.querySelectorAll('svg [id], svg [class]');
+        allElements.forEach(element => {
+            const id = element.getAttribute('id') || '';
+            const className = element.getAttribute('class') || '';
+            
+            if (id.toLowerCase().includes(text.toLowerCase()) || 
+                className.toLowerCase().includes(text.toLowerCase())) {
+                element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                element.style.opacity = '0.8';
+                element.classList.add('highlighted');
+                console.log('Highlighted partial match:', element, 'matches:', text);
+            }
         });
+        
+        // Also search in href attributes and other text content
+        const allTextNodes = document.querySelectorAll('svg *');
+        allTextNodes.forEach(element => {
+            // Check various attributes for partial matches
+            ['href', 'xlink:href', 'data-id'].forEach(attr => {
+                const value = element.getAttribute(attr);
+                if (value && value.toLowerCase().includes(text.toLowerCase())) {
+                    element.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                    element.style.opacity = '0.8';
+                    element.classList.add('highlighted');
+                    console.log('Highlighted attribute match:', element, attr, '=', value);
+                }
+            });
+        });
+        
+        // STRUCTURAL RELATIONSHIP MATCHING using ALPS hierarchy
+        console.log('Using ALPS relationships for:', text);
+        
+        if (window.alpsRelationships) {
+            const relationships = window.alpsRelationships;
+            
+            // If this text is a child element, highlight its parents
+            if (relationships.parentOf[text]) {
+                relationships.parentOf[text].forEach(parentId => {
+                    console.log('Highlighting parent:', parentId, 'contains child:', text);
+                    
+                    // Find SVG elements with this parent ID
+                    document.querySelectorAll('svg text').forEach(textEl => {
+                        if (textEl.textContent && textEl.textContent.trim() === parentId) {
+                            let parentGroup = textEl.closest('g');
+                            if (parentGroup) {
+                                parentGroup.style.filter = 'drop-shadow(0 0 6px #35a3ff)'; // Blue for parents
+                                parentGroup.style.opacity = '0.9';
+                                parentGroup.classList.add('highlighted');
+                                console.log('✓ Highlighted parent element:', parentId);
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // If this text is a parent element, highlight its children  
+            if (relationships.childrenOf[text]) {
+                relationships.childrenOf[text].forEach(childId => {
+                    console.log('Highlighting child:', childId, 'of parent:', text);
+                    
+                    // Find SVG elements with this child ID
+                    document.querySelectorAll('svg text').forEach(textEl => {
+                        if (textEl.textContent && (textEl.textContent.trim() === childId || textEl.textContent.includes(childId))) {
+                            let parentGroup = textEl.closest('g');
+                            if (parentGroup) {
+                                parentGroup.style.filter = 'drop-shadow(0 0 6px #00ff88)'; // Green for children
+                                parentGroup.style.opacity = '0.9';
+                                parentGroup.classList.add('highlighted');
+                                console.log('✓ Highlighted child element:', childId);
+                            }
+                        }
+                    });
+                });
+            }
+        }
     }
     
     function clearHighlightsInSVG() {
@@ -275,8 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    convertAlpsToDot(content, fileType) {
-        console.log('convertAlpsToDot called with fileType:', fileType);
+    parseAlpsData(content, fileType) {
+        console.log('parseAlpsData called with fileType:', fileType);
         let alpsData;
 
         // Parse ALPS content
@@ -302,9 +490,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        const dotResult = this.generateDotFromAlps(alpsData);
-        console.log('Generated DOT result:', dotResult);
-        return dotResult;
+        return alpsData;
+    }
+
+    convertAlpsToDot(content, fileType) {
+        // This method is now deprecated - use parseAlpsData + generateDotFromAlps instead
+        const alpsData = this.parseAlpsData(content, fileType);
+        return this.generateDotFromAlps(alpsData);
     }
 
     xmlToAlpsObject(xmlDoc) {
@@ -405,6 +597,43 @@ document.addEventListener('DOMContentLoaded', function() {
         dot += '\n}';
 
         return dot;
+    }
+
+    buildRelationshipMap(alpsData) {
+        const relationships = {
+            parentOf: {}, // parentOf['name'] = ['ProductList', 'UserProfile'] (parents that contain 'name')
+            childrenOf: {} // childrenOf['ProductList'] = ['name', 'id', 'goCart'] (children of ProductList)
+        };
+        
+        const descriptors = alpsData.alps?.descriptor || [];
+        
+        descriptors.forEach(parent => {
+            if (parent.id && parent.descriptor && Array.isArray(parent.descriptor)) {
+                // Initialize children array for this parent
+                relationships.childrenOf[parent.id] = [];
+                
+                parent.descriptor.forEach(child => {
+                    let childId = child.href || child.id;
+                    if (childId && childId.startsWith('#')) {
+                        childId = childId.substring(1); // Remove #
+                    }
+                    
+                    if (childId) {
+                        // Record parent-child relationship
+                        relationships.childrenOf[parent.id].push(childId);
+                        
+                        // Record child-parent relationship
+                        if (!relationships.parentOf[childId]) {
+                            relationships.parentOf[childId] = [];
+                        }
+                        relationships.parentOf[childId].push(parent.id);
+                    }
+                });
+            }
+        });
+        
+        console.log('Built relationships:', relationships);
+        return relationships;
     }
 
     findSourceStatesForTransition(transitionId, descriptors) {

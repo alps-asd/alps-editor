@@ -784,12 +784,35 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     setupDiagramClickHandler() {
         // Listen for messages from iframe diagram
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'jumpToId') {
-                const id = event.data.id;
-                console.log('Jumping to ID:', id);
-                this.jumpToId(id);
+            if (event.data) {
+                if (event.data.type === 'jumpToId') {
+                    const id = event.data.id;
+                    console.log('Jumping to ID:', id);
+                    this.jumpToId(id);
+                } else if (event.data.type === 'setFullscreenDiagram') {
+                    this.toggleMainUIVisibility(!event.data.fullscreen);
+                }
             }
         });
+    }
+
+    toggleMainUIVisibility(visible) {
+        const topBar = document.getElementById('top-bar');
+        const editorContainer = document.getElementById('editor-container');
+        
+        if (visible) {
+            // Show UI
+            topBar.style.display = '';
+            editorContainer.style.display = '';
+            document.body.style.overflow = '';
+            console.log('Main UI shown');
+        } else {
+            // Hide UI for fullscreen diagram
+            topBar.style.display = 'none';
+            editorContainer.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            console.log('Main UI hidden for fullscreen diagram');
+        }
     }
 
     jumpToId(id) {
