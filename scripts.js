@@ -11,6 +11,9 @@ class AlpsEditor {
         this.isDebugMode = false;
         this.adapterManager = new DiagramAdapterManager();
         this.isLocalMode = window.location.protocol === 'file:'; // ローカルファイルで開いているかチェック
+        // Portable static detection: prefer explicit flag; default to static when flag is absent
+        const hasApi = (typeof window.ALPSEDITOR_HAS_API === 'boolean') ? window.ALPSEDITOR_HAS_API : false;
+        this.isStaticMode = !hasApi || this.isLocalMode;
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
@@ -182,7 +185,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
 
 </alps>`;
-            
+
             this.editor.setValue(defaultXml);
             this.editor.getSession().setMode("ace/mode/xml");
         } catch (error) {
@@ -329,15 +332,15 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     async updatePreview(content, fileType) {
         try {
             this.debugLog(`Using ${this.adapterManager.getCurrentAdapter().getName()} for diagram generation`);
-            
+
             // Use the adapter manager to generate diagram
             const url = await this.adapterManager.generateDiagram(content, fileType);
-            
+
             document.getElementById('preview-frame').src = url;
             this.debugLog('Preview updated');
             this.updateValidationMark(true);
             this.displayErrors([]);
-            
+
         } catch (error) {
             this.handleError(error, 'Diagram generation failed');
             this.updateValidationMark(false);
@@ -353,18 +356,18 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     setupAdapterSelector() {
         const selector = document.getElementById('diagramAdapter');
-        
-        if (this.isLocalMode) {
-            // ローカルモードではDiagramのみ利用可能
+
+        if (this.isLocalMode || this.isStaticMode) {
+            // ローカル/静的ホスティングではDiagramのみ利用可能
             this.adapterManager.setAdapter('alps2dot');
             selector.value = 'alps2dot';
             selector.disabled = true;
-            selector.title = 'ローカルモードではDiagramモードのみ利用可能です';
+            selector.title = this.isStaticMode ? 'Static版ではDiagramモードのみ利用可能です' : 'ローカルモードではDiagramモードのみ利用可能です';
         } else {
             // Set current value
             selector.value = this.adapterManager.currentAdapter;
         }
-        
+
         // Handle changes
         selector.addEventListener('change', (event) => {
             const newAdapter = event.target.value;
@@ -440,21 +443,21 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
         // Clear container and create elements safely to prevent XSS
         errorContainer.innerHTML = '';
-        
+
         const errorTitle = document.createElement('div');
         errorTitle.className = 'error-title';
         errorTitle.textContent = 'Errors';
         errorContainer.appendChild(errorTitle);
-        
+
         errors.forEach(error => {
             const errorMessage = document.createElement('div');
             errorMessage.className = 'error-message';
             errorMessage.textContent = error.text;
-            
+
             const errorLocation = document.createElement('div');
             errorLocation.className = 'error-location';
             errorLocation.textContent = `Line: ${error.row + 1}, Column: ${error.column + 1}`;
-            
+
             errorContainer.appendChild(errorMessage);
             errorContainer.appendChild(errorLocation);
         });
@@ -561,6 +564,21 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             const content = this.editor.getValue();
             const fileType = this.detectFileType(content);
+
+            if (this.isLocalMode || this.isStaticMode) {
+                // Static/Local: download the ALPS content directly
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                this.debugLog('ALPS profile downloaded');
+                return;
+            }
 
             try {
                 this.debugLog('Starting API request...');
