@@ -803,14 +803,24 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         const searchTerm = `id="${id}"`;
         console.log('Searching for:', searchTerm);
         
-        // Use Ace editor's find functionality
-        this.editor.find(searchTerm, {
+        // Find the text first
+        const range = this.editor.find(searchTerm, {
             backwards: false,
             wrap: true,
             caseSensitive: true,
             wholeWord: false,
             regExp: false
         });
+        
+        if (range) {
+            // Get the line number where the match was found
+            const lineNumber = range.start.row;
+            
+            // Select the entire line
+            this.editor.selection.selectLine();
+            
+            console.log('Selected entire line:', lineNumber);
+        }
         
         // Focus the editor after search
         this.editor.focus();
