@@ -79,7 +79,7 @@ class AlpsEditor {
             let defaultXml;
             
             if (this.isLocalMode) {
-                // ローカルモード用のデフォルトXML
+                // Static/Local mode: embedded XML (external file access blocked by CORS)
                 defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Welcome to Alps Editor! Let's make API design fun and effective.
