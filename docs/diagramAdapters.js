@@ -285,7 +285,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const color = this.getTransitionColor(trans.type);
                     const symbol = this.getTransitionSymbol(trans.type);
 
-                    // Use colored emoji + black text
+                    // Use colored square emoji + black text
                     dot += `    ${sourceState} -> ${targetState} [label="${symbol} ${trans.id}" URL="#${trans.id}" target="_parent" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
                 });
             }
@@ -330,12 +330,12 @@ class Alps2DotAdapter extends DiagramAdapter {
     }
 
     getTransitionSymbol(type) {
-        // Use colored emoji symbols
+        // Use large colored square emoji
         switch (type) {
-            case 'safe': return '🟢';      // Green circle
-            case 'unsafe': return '🔴';    // Red circle
-            case 'idempotent': return '🟡'; // Yellow circle
-            default: return '⚫';         // Black circle
+            case 'safe': return '🟩';      // Green large square
+            case 'unsafe': return '🟥';    // Red large square
+            case 'idempotent': return '🟨'; // Yellow large square
+            default: return '⬛';         // Black large square
         }
     }
 }
