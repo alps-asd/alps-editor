@@ -74,13 +74,12 @@ class AsdAdapter extends DiagramAdapter {
                     // Clear previous highlights
                     clearHighlightsInASD();
                     
-                    // More selective approach: look for exact or close matches only
-                    // 1. First try exact ID matches
-                    const exactIdElements = document.querySelectorAll('[id="' + text + '"]');
+                    // 1. Simple ID-based matching
+                    const exactIdElements = document.querySelectorAll('a[id="' + text + '"]');
                     if (exactIdElements.length > 0) {
                         exactIdElements.forEach(element => {
                             element.classList.add('highlighted');
-                            console.log('ASD: Highlighted exact ID match:', element);
+                            console.log('ASD: Highlighted a[id=' + text + ']:', element);
                         });
                         return; // Found exact matches, stop here
                     }
@@ -110,24 +109,18 @@ class AsdAdapter extends DiagramAdapter {
                         }
                     });
                     
-                    // 3. Check SVG elements within ASD (more selective)
+                    // 2. SVG elements - use same approach as Diagram version
                     const svgElements = document.querySelectorAll('svg text, svg title');
                     svgElements.forEach(element => {
-                        const textContent = element.textContent || '';
-                        
-                        // Only highlight SVG elements with exact text matches or complete word matches
-                        const isExactMatch = textContent.trim() === text.trim();
-                        const isCompleteWordMatch = textContent.toLowerCase().includes(' ' + text.toLowerCase() + ' ') ||
-                                                  textContent.toLowerCase().startsWith(text.toLowerCase() + ' ') ||
-                                                  textContent.toLowerCase().endsWith(' ' + text.toLowerCase()) ||
-                                                  textContent.toLowerCase() === text.toLowerCase();
-                        
-                        if (isExactMatch || isCompleteWordMatch) {
-                            let parentGroup = element.closest('g') || element;
-                            parentGroup.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
-                            parentGroup.style.opacity = '0.8';
-                            parentGroup.classList.add('highlighted');
-                            console.log('ASD: Highlighted SVG element:', element, 'text:', textContent);
+                        if (element.textContent && element.textContent.toLowerCase().includes(text.toLowerCase())) {
+                            // Find the parent group or shape to highlight
+                            let parentShape = element.closest('g');
+                            if (parentShape) {
+                                parentShape.style.filter = 'drop-shadow(0 0 8px #ff6b35)';
+                                parentShape.style.opacity = '0.8';
+                                parentShape.classList.add('highlighted');
+                                console.log('ASD: Highlighted SVG element:', element, 'text:', element.textContent);
+                            }
                         }
                     });
                 }
