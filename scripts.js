@@ -209,7 +209,7 @@ class AlpsEditor {
 
     unescapeHtml(html) {
         const txt = document.createElement('textarea');
-        txt.innerHTML = html;
+        txt.textContent = html; // Use textContent instead of innerHTML to prevent XSS
         return txt.value;
     }
 
@@ -373,13 +373,26 @@ class AlpsEditor {
             return;
         }
 
-        errorContainer.innerHTML = `
-            <div class="error-title">Errors</div>
-            ${errors.map(error => `
-                <div class="error-message">${error.text}</div>
-                <div class="error-location">Line: ${error.row + 1}, Column: ${error.column + 1}</div>
-            `).join('')}
-        `;
+        // Clear container and create elements safely to prevent XSS
+        errorContainer.innerHTML = '';
+        
+        const errorTitle = document.createElement('div');
+        errorTitle.className = 'error-title';
+        errorTitle.textContent = 'Errors';
+        errorContainer.appendChild(errorTitle);
+        
+        errors.forEach(error => {
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message';
+            errorMessage.textContent = error.text;
+            
+            const errorLocation = document.createElement('div');
+            errorLocation.className = 'error-location';
+            errorLocation.textContent = `Line: ${error.row + 1}, Column: ${error.column + 1}`;
+            
+            errorContainer.appendChild(errorMessage);
+            errorContainer.appendChild(errorLocation);
+        });
         errorContainer.style.display = 'block';
     }
 

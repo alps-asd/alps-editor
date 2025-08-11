@@ -51,17 +51,19 @@ try {
     $asd = new Asd();
     $diagram = $asd($tempFileWithExtension);
     
-    // Return both original profile and generated diagram
+    // Return both original profile and generated diagram (XSS protection)
+    header('Content-Type: application/json');
     echo json_encode([
-        'profile' => $profileData,
+        'profile' => htmlspecialchars($profileData, ENT_QUOTES, 'UTF-8'),
         'diagram' => $diagram
     ]);
     
 } catch (\Throwable $e) {
     http_response_code(500);
+    header('Content-Type: application/json');
     echo json_encode([
         'error' => 'ALPS processing failed',
-        'message' => $e->getMessage(),
-        'input' => $profileData
+        'message' => htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'),
+        'input' => htmlspecialchars($profileData, ENT_QUOTES, 'UTF-8')
     ]);
 }
