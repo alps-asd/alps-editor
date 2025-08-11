@@ -149,7 +149,11 @@ class Alps2DotAdapter extends DiagramAdapter {
 
             try {
                 const ok = await ensureHpccInParent();
-                const wasm = window["@hpcc-js/wasm"];
+                let wasm = window["@hpcc-js/wasm"];
+                for (let i = 0; i < 50 && (!wasm || !wasm.graphviz || typeof wasm.graphviz.layout !== 'function'); i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    wasm = window["@hpcc-js/wasm"];
+                }
                 if (ok && wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function') {
                     const svg = await wasm.graphviz.layout(dotContent, 'svg', 'dot');
                     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
@@ -163,6 +167,7 @@ class Alps2DotAdapter extends DiagramAdapter {
             }
 
             // Fallback: render inside iframe HTML (kept for environments where parent loading is blocked)
+            const dotJson = JSON.stringify(dotContent);
             const html = `
                     <!DOCTYPE html>
                     <html>
@@ -230,6 +235,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                                 tryGraphvizRender();
                             }
                             
+                            function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
                             async function tryGraphvizRender() {
                                 const outputDiv = document.getElementById('graphviz-output');
                                 if (!outputDiv) {
@@ -245,7 +251,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                                     await new Promise(resolve => setTimeout(resolve, 100));
                                     
                                     // Use d3-graphviz like ASD does
-                                    const dot = \`${dotContent.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+                                    const dot = ${dotJson};
                                     
                                     // Wait up to ~5 seconds for dependencies to be present
                                     const awaitDeps = async () => {
@@ -285,7 +291,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                                             \${error.message}<br><br>
                                             <details>
                                                 <summary>View DOT source</summary>
-                                                <pre style=\"background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;\">\${dotContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                                                <pre style=\"background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;\">\${escapeHtml(dot)}</pre>
                                             </details>
                                         </div>
                                     \`;
