@@ -81,10 +81,10 @@ class AsdAdapter extends DiagramAdapter {
                     }
                 });
                 </script>`;
-                
+
                 // Fix HTML structure issues before insertion
                 responseText = this.fixHtmlStructure(responseText);
-                
+
                 // Insert the code before the closing </head> tag
                 if (responseText.includes('</head>')) {
                     responseText = responseText.replace('</head>', initializationCode + '\n</head>');
@@ -106,7 +106,7 @@ class AsdAdapter extends DiagramAdapter {
             throw new Error(`ASD generation failed: ${error.message}`);
         }
     }
-    
+
     fixHtmlStructure(html) {
         // Fix common HTML structure issues that cause XML parsing errors
         return html
@@ -129,11 +129,11 @@ class Alps2DotAdapter extends DiagramAdapter {
     async generate(content, fileType) {
         try {
             console.log('Alps2DotAdapter.generate called with:', { content: content.substring(0, 200) + '...', fileType });
-            
+
             // Generate DOT content using simple ALPS to DOT conversion
             const dotContent = this.convertAlpsToDot(content, fileType);
             console.log('Generated DOT content:', dotContent.substring(0, 200) + '...');
-            
+
             // Now let's render the DOT as SVG using WASM Graphviz
             const html = `
                     <!DOCTYPE html>
@@ -219,20 +219,45 @@ class Alps2DotAdapter extends DiagramAdapter {
                                     // Use d3-graphviz like ASD does
                                     const dot = \`${dotContent.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
                                     
-                                    // Render using d3-graphviz (same approach as ASD)
-                                    d3.select("#graph")
-                                        .graphviz()
-                                        .renderDot(dot);
+                                    // Wait up to ~5 seconds for dependencies to be present
+                                    const awaitDeps = async () => {
+                                        for (let i = 0; i < 50; i++) {
+                                            const hasD3 = typeof window.d3 !== 'undefined';
+                                            const hasD3Graphviz = hasD3 && typeof window.d3.graphviz === 'function';
+                                            const wasm = window["@hpcc-js/wasm"]; 
+                                            const hasHpcc = wasm && wasm.graphviz && typeof wasm.graphviz.layout === 'function';
+                                            if (hasD3Graphviz || hasHpcc) {
+                                                return { hasD3Graphviz, hasHpcc };
+                                            }
+                                            await new Promise(r => setTimeout(r, 100));
+                                        }
+                                        return { hasD3Graphviz: false, hasHpcc: false };
+                                    };
+
+                                    const { hasD3Graphviz, hasHpcc } = await awaitDeps();
+
+                                    if (hasD3Graphviz) {
+                                        // Render using d3-graphviz (same approach as ASD)
+                                        d3.select("#graph")
+                                            .graphviz()
+                                            .renderDot(dot);
+                                    } else if (hasHpcc) {
+                                        // Fallback: render directly with hpcc wasm graphviz
+                                        const svg = await window["@hpcc-js/wasm"].graphviz.layout(dot, "svg", "dot");
+                                        outputDiv.innerHTML = svg;
+                                    } else {
+                                        throw new Error('Failed to load Graphviz dependencies: d3-graphviz not available after loading');
+                                    }
                                     
                                 } catch (error) {
                                     console.error('Graphviz rendering error:', error);
                                     outputDiv.innerHTML = \`
-                                        <div style="color: #dc3545; padding: 20px; text-align: left;">
+                                        <div style=\"color: #dc3545; padding: 20px; text-align: left;\">
                                             <strong>Diagram rendering failed:</strong><br>
                                             \${error.message}<br><br>
                                             <details>
                                                 <summary>View DOT source</summary>
-                                                <pre style="background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;">\${dotContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                                                <pre style=\"background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 11px; overflow: auto; max-height: 200px;\">\${dotContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
                                             </details>
                                         </div>
                                     \`;
@@ -242,7 +267,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                     </body>
                     </html>
                 `;
-            
+
             const blob = new Blob([html], { type: 'text/html' });
             return URL.createObjectURL(blob);
         } catch (error) {
@@ -253,7 +278,7 @@ class Alps2DotAdapter extends DiagramAdapter {
     convertAlpsToDot(content, fileType) {
         console.log('convertAlpsToDot called with fileType:', fileType);
         let alpsData;
-        
+
         // Parse ALPS content
         if (fileType === 'JSON') {
             try {
@@ -276,7 +301,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                 throw new Error('Invalid XML format: ' + e.message);
             }
         }
-        
+
         const dotResult = this.generateDotFromAlps(alpsData);
         console.log('Generated DOT result:', dotResult);
         return dotResult;
@@ -285,7 +310,7 @@ class Alps2DotAdapter extends DiagramAdapter {
     xmlToAlpsObject(xmlDoc) {
         const alpsElement = xmlDoc.documentElement;
         const descriptors = [];
-        
+
         // Extract only top-level descriptors from XML
         const descriptorElements = xmlDoc.querySelectorAll('alps > descriptor');
         descriptorElements.forEach(desc => {
@@ -297,7 +322,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                 tag: desc.getAttribute('tag'),
                 def: desc.getAttribute('def') // Schema.org definition indicates ontology
             };
-            
+
             // Extract nested descriptors (href references) - only direct children
             const nestedDescs = Array.from(desc.children).filter(child => child.tagName === 'descriptor');
             if (nestedDescs.length > 0) {
@@ -309,10 +334,10 @@ class Alps2DotAdapter extends DiagramAdapter {
                     });
                 });
             }
-            
+
             descriptors.push(descriptor);
         });
-        
+
         return {
             alps: {
                 title: xmlDoc.querySelector('title')?.textContent || 'ALPS Diagram',
@@ -323,17 +348,17 @@ class Alps2DotAdapter extends DiagramAdapter {
 
     generateDotFromAlps(alpsData) {
         const descriptors = alpsData.alps?.descriptor || [];
-        
+
         // Separate states and transitions (exclude ontology descriptors)
-        const states = descriptors.filter(d => 
-            d.tag === 'collection' || d.tag === 'item' || 
+        const states = descriptors.filter(d =>
+            d.tag === 'collection' || d.tag === 'item' ||
             (d.id && !d.type && !d.rt && !d.def && d.descriptor && d.descriptor.length > 0)
         );
         const transitions = descriptors.filter(d => d.type && d.rt);
-        
+
         console.log('States found:', states.map(s => s.id));
         console.log('Transitions found:', transitions.map(t => t.id));
-        
+
         let dot = `digraph application_state_diagram {
     graph [
         labelloc="t";
@@ -357,11 +382,11 @@ class Alps2DotAdapter extends DiagramAdapter {
             if (trans.id && trans.rt) {
                 const targetState = trans.rt.replace('#', '');
                 const sourceStates = this.findSourceStatesForTransition(trans.id, descriptors);
-                
+
                 sourceStates.forEach(sourceState => {
                     const color = this.getTransitionColor(trans.type);
                     const symbol = this.getTransitionSymbol(trans.type);
-                    
+
                     dot += `    ${sourceState} -> ${targetState} [label=<<table border="0" cellborder="0" cellspacing="0" cellpadding="0"><tr><td valign="middle" href="#${trans.id}" tooltip="${trans.title || trans.id} (${trans.type})"><font color="${color}">${symbol}</font> ${trans.id}</td></tr></table>> URL="#${trans.id}" target="_parent" fontsize=13 class="${trans.id}" penwidth=1.5];\n`;
                 });
             }
@@ -377,7 +402,7 @@ class Alps2DotAdapter extends DiagramAdapter {
         });
 
         dot += '\n}';
-        
+
         return dot;
     }
 
@@ -385,7 +410,7 @@ class Alps2DotAdapter extends DiagramAdapter {
         const sources = [];
         descriptors.forEach(desc => {
             if (desc.descriptor && Array.isArray(desc.descriptor)) {
-                const hasTransition = desc.descriptor.some(nested => 
+                const hasTransition = desc.descriptor.some(nested =>
                     nested.href === `#${transitionId}` || nested.id === transitionId
                 );
                 if (hasTransition && desc.id) {
