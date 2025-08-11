@@ -147,11 +147,8 @@ class Alps2DotAdapter extends DiagramAdapter {
                 console.log('Main page: Using pre-loaded Viz.js to generate SVG...');
                 try {
                     const vizInstance = new viz();
-                    const svg = await vizInstance.renderSVGElement(dotContent);
+                    const svgString = await vizInstance.renderString(dotContent, { format: 'svg' });
                     console.log('Main page: SVG generated successfully');
-                    
-                    // Convert SVG element to string
-                    const svgString = svg.outerHTML;
                     
                     // Return the SVG directly as data URL for iframe-less display
                     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ALPS Diagram</title>
