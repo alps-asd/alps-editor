@@ -10,6 +10,7 @@ class AlpsEditor {
         this.customAnnotations = [];
         this.isDebugMode = false;
         this.adapterManager = new DiagramAdapterManager();
+        this.isLocalMode = window.location.protocol === 'file:'; // ローカルファイルで開いているかチェック
         this.SKELETON_SNIPPETS = [
             {
                 caption: 'ALPS XML Skeleton',
@@ -74,8 +75,44 @@ class AlpsEditor {
 
     async loadDefaultXml() {
         try {
-            const response = await fetch('/default-alps.xml');
-            const defaultXml = await response.text();
+            let defaultXml;
+            
+            if (this.isLocalMode) {
+                // ローカルモード用のデフォルトXML
+                defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
+<alps xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://alps-io.github.io/schemas/alps.xsd">
+    <title>ALPS Sample Profile</title>
+    <doc>A simple ALPS profile for demonstration purposes</doc>
+    
+    <!-- Ontology -->
+    <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
+    <descriptor id="name" def="https://schema.org/name" title="name"/>
+    <descriptor id="description" def="https://schema.org/description" title="description"/>
+    
+    <!-- Taxonomy -->
+    <descriptor id="ProductList" title="Product List" tag="collection">
+        <descriptor href="#name"/>
+        <descriptor href="#goProductDetail"/>
+    </descriptor>
+    
+    <descriptor id="ProductDetail" title="Product Detail" tag="item">
+        <descriptor href="#id"/>
+        <descriptor href="#name"/>
+        <descriptor href="#description"/>
+        <descriptor href="#goProductList"/>
+    </descriptor>
+    
+    <!-- Choreography -->
+    <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list"/>
+    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
+        <descriptor href="#id"/>
+    </descriptor>
+</alps>`;
+            } else {
+                const response = await fetch('/default-alps.xml');
+                defaultXml = await response.text();
+            }
+            
             this.editor.setValue(defaultXml);
             this.editor.getSession().setMode("ace/mode/xml");
         } catch (error) {
@@ -85,8 +122,29 @@ class AlpsEditor {
 
     async setupCompletion() {
         try {
-            const schemaResponse = await axios.get('/alps.json');
-            this.alpsSchema = schemaResponse.data;
+            if (this.isLocalMode) {
+                // ローカルモード用の簡易スキーマ
+                this.alpsSchema = {
+                    type: "object",
+                    properties: {
+                        alps: {
+                            type: "object",
+                            properties: {
+                                version: { type: "string" },
+                                title: { type: "string" },
+                                doc: { type: ["string", "object"] },
+                                descriptor: {
+                                    type: "array",
+                                    items: { type: "object" }
+                                }
+                            }
+                        }
+                    }
+                };
+            } else {
+                const schemaResponse = await axios.get('/alps.json');
+                this.alpsSchema = schemaResponse.data;
+            }
         } catch (error) {
             this.handleError(error, 'Failed to load ALPS schema');
         }
@@ -231,8 +289,16 @@ class AlpsEditor {
     setupAdapterSelector() {
         const selector = document.getElementById('diagramAdapter');
         
-        // Set current value
-        selector.value = this.adapterManager.currentAdapter;
+        if (this.isLocalMode) {
+            // ローカルモードではDiagramのみ利用可能
+            this.adapterManager.setAdapter('alps2dot');
+            selector.value = 'alps2dot';
+            selector.disabled = true;
+            selector.title = 'ローカルモードではDiagramモードのみ利用可能です';
+        } else {
+            // Set current value
+            selector.value = this.adapterManager.currentAdapter;
+        }
         
         // Handle changes
         selector.addEventListener('change', (event) => {

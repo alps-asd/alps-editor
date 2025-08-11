@@ -37,6 +37,13 @@ body, html {
     margin-right: 10px;
 }
 
+/* ローカルモード用のスタイル */
+#diagramAdapter:disabled {
+    background-color: #f5f5f5;
+    color: #666;
+    cursor: not-allowed;
+}
+
 #downloadBtn {
     background-color: green;
     color: white;
