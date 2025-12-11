@@ -106,7 +106,7 @@ ALPS bridges vision and implementation, creating APIs that speak business and te
 Learn more:
 - User Guide: https://alps-asd.github.io/alps-editor/user-guide.html
 - ALPS Editor: https://github.com/alps-asd/alps-editor
-- ALPS Specification: http://alps.io/
+- ALPS Specification: https://alps.io/
 - app-state-diagram: https://www.app-state-diagram.com/
 - Vocabulary: https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html
 

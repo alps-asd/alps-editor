@@ -78,5 +78,5 @@ The editor performs two types of validation:
 
 - [User Guide](https://alps-asd.github.io/alps-editor/user-guide.html) - Complete guide to using the editor
 - [app-state-diagram](https://www.app-state-diagram.com/) - ALPS visualization tool
-- [ALPS Specification](http://alps.io/) - Official ALPS documentation
+- [ALPS Specification](https://alps.io/) - Official ALPS documentation
 - [Vocabulary Guide](https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html) - Schema.org semantic terms for ALPS
