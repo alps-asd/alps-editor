@@ -284,6 +284,14 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const links = extractLinks(alpsData);
                     const linksHtml = generateLinksHtml(links);
 
+                    // Escape JSON for safe embedding in <script> tags
+                    const escapeJsonForScript = (obj) => {
+                        return JSON.stringify(obj)
+                            .replace(/</g, '\\u003c')
+                            .replace(/>/g, '\\u003e')
+                            .replace(/&/g, '\\u0026');
+                    };
+
                     // Escape ALPS source for hidden embedding (used by drag & drop)
                     const escapedContent = content
                         .replace(/&/g, '&amp;')
@@ -385,7 +393,7 @@ td a:hover{text-decoration:underline;}
 </style>
 <script>
 // ALPS relationship data for parent-child highlighting
-window.alpsRelationships = ${JSON.stringify(relationships).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')};
+window.alpsRelationships = ${escapeJsonForScript(relationships)};
 console.log('Loaded relationships:', window.alpsRelationships);
 
 // Scroll to descriptor row and highlight it
@@ -684,7 +692,7 @@ ${linksHtml}
 <script>
 
 // Tag filtering - using same logic as production ASD
-const tagDescriptorMap = ${JSON.stringify(tagDescriptorMap)};
+const tagDescriptorMap = ${escapeJsonForScript(tagDescriptorMap)};
 
 // Changes color of SVG elements by title (matching production ASD)
 const changeColorByTitle = (titleOrClass, newNodeColor, newEdgeColor, highlight = false) => {
@@ -751,7 +759,7 @@ Object.keys(tagDescriptorMap).forEach(tag => {
 setupTagTrigger();
 
 // Label mode switching
-const alpsData = ${JSON.stringify(alpsData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')};
+const alpsData = ${escapeJsonForScript(alpsData)};
 
 function generateDotFromAlps(alpsData, labelMode) {
     const descriptors = alpsData.alps?.descriptor || [];
