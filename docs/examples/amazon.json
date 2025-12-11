@@ -915,7 +915,7 @@
       {
         "id": "SearchSuggest",
         "title": "Search Suggestions",
-        "tag": "search, flow-purchase",
+        "tag": "search flow-purchase",
         "descriptor": [
           {
             "href": "#searchQuery"
@@ -937,7 +937,7 @@
       {
         "id": "SearchResults",
         "title": "Search Results",
-        "tag": "search, flow-purchase",
+        "tag": "search flow-purchase",
         "descriptor": [
           {
             "href": "#searchQuery"
@@ -1044,7 +1044,7 @@
       {
         "id": "CategoryBrowse",
         "title": "Category Browse",
-        "tag": "search, flow-purchase",
+        "tag": "search flow-purchase",
         "descriptor": [
           {
             "href": "#categoryId"
@@ -1069,7 +1069,7 @@
       {
         "id": "ProductList",
         "title": "Product List",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#categoryId"
@@ -1115,7 +1115,7 @@
       {
         "id": "Deals",
         "title": "Deals",
-        "tag": "deals, flow-purchase",
+        "tag": "deals flow-purchase",
         "descriptor": [
           {
             "href": "#ProductTile"
@@ -1143,7 +1143,7 @@
       {
         "id": "LightningDeals",
         "title": "Lightning Deals",
-        "tag": "deals, flow-purchase",
+        "tag": "deals flow-purchase",
         "descriptor": [
           {
             "href": "#ProductTile"
@@ -1171,7 +1171,7 @@
       {
         "id": "CouponPage",
         "title": "Coupon Page",
-        "tag": "deals, flow-purchase",
+        "tag": "deals flow-purchase",
         "descriptor": [
           {
             "href": "#couponCode"
@@ -1196,7 +1196,7 @@
       {
         "id": "Ranking",
         "title": "Ranking",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#rankingType"
@@ -1227,7 +1227,7 @@
       {
         "id": "BestSellers",
         "title": "Best Sellers",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#categoryId"
@@ -1249,7 +1249,7 @@
       {
         "id": "NewReleases",
         "title": "New Releases",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#categoryId"
@@ -1268,7 +1268,7 @@
       {
         "id": "ProductDetail",
         "title": "Product Detail",
-        "tag": "product, flow-purchase, flow-review",
+        "tag": "product flow-purchase flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -1453,7 +1453,7 @@
       {
         "id": "BuyBox",
         "title": "Buy Box",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#sellerId"
@@ -1543,7 +1543,7 @@
       {
         "id": "OtherSellers",
         "title": "Other Sellers",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -1668,7 +1668,7 @@
       {
         "id": "FrequentlyBoughtTogether",
         "title": "Frequently Bought Together",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -1690,7 +1690,7 @@
       {
         "id": "ReviewList",
         "title": "Review List",
-        "tag": "review, flow-review",
+        "tag": "review flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -1770,7 +1770,7 @@
       {
         "id": "WriteReview",
         "title": "Write Review",
-        "tag": "review, flow-review",
+        "tag": "review flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -1855,7 +1855,7 @@
       {
         "id": "Cart",
         "title": "Cart",
-        "tag": "cart, flow-purchase",
+        "tag": "cart flow-purchase",
         "descriptor": [
           {
             "href": "#CartItem"
@@ -2006,7 +2006,7 @@
       {
         "id": "GiftOptions",
         "title": "Gift Options",
-        "tag": "cart, flow-purchase",
+        "tag": "cart flow-purchase",
         "descriptor": [
           {
             "href": "#cartItemId"
@@ -2031,7 +2031,7 @@
       {
         "id": "Checkout",
         "title": "Checkout",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#CartItem"
@@ -2129,7 +2129,7 @@
       {
         "id": "SelectAddress",
         "title": "Select Address",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#ShippingAddress"
@@ -2157,7 +2157,7 @@
       {
         "id": "AddAddress",
         "title": "Add Address",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#recipientName"
@@ -2197,7 +2197,7 @@
       {
         "id": "EditAddress",
         "title": "Edit Address",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#addressId"
@@ -2240,7 +2240,7 @@
       {
         "id": "SelectHub",
         "title": "Select Pickup Location",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#hubId"
@@ -2265,7 +2265,7 @@
       {
         "id": "PlacementOptions",
         "title": "Placement Options",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#placementOption"
@@ -2315,7 +2315,7 @@
       {
         "id": "SelectDelivery",
         "title": "Select Delivery Option",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#DeliveryOption"
@@ -2337,7 +2337,7 @@
       {
         "id": "ScheduleDelivery",
         "title": "Schedule Delivery",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#deliveryDate"
@@ -2381,7 +2381,7 @@
       {
         "id": "SelectPayment",
         "title": "Select Payment Method",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#PaymentMethod"
@@ -2415,7 +2415,7 @@
       {
         "id": "AddCard",
         "title": "Add Card",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#cardNumber"
@@ -2443,7 +2443,7 @@
       {
         "id": "ConveniencePayment",
         "title": "Convenience Store Payment",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#convenienceStore"
@@ -2459,7 +2459,7 @@
       {
         "id": "PaidyPayment",
         "title": "Paidy Payment",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#paidyInstallments"
@@ -2475,7 +2475,7 @@
       {
         "id": "CarrierBilling",
         "title": "Carrier Billing",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#carrierType"
@@ -2491,7 +2491,7 @@
       {
         "id": "ApplyCouponCode",
         "title": "Apply Coupon Code",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#couponCode"
@@ -2510,7 +2510,7 @@
       {
         "id": "ApplyGiftCard",
         "title": "Apply Gift Card",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#giftCardCode"
@@ -2529,7 +2529,7 @@
       {
         "id": "OrderComplete",
         "title": "Order Complete",
-        "tag": "order, flow-purchase",
+        "tag": "order flow-purchase",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2557,7 +2557,7 @@
       {
         "id": "ConveniencePaymentInstructions",
         "title": "Convenience Store Payment Instructions",
-        "tag": "order, flow-purchase",
+        "tag": "order flow-purchase",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2629,7 +2629,7 @@
       {
         "id": "OrderDetail",
         "title": "Order Detail",
-        "tag": "order, flow-return, flow-review, flow-redelivery",
+        "tag": "order flow-return flow-review flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2730,7 +2730,7 @@
       {
         "id": "TrackPackage",
         "title": "Track Package",
-        "tag": "order, flow-redelivery",
+        "tag": "order flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2783,7 +2783,7 @@
       {
         "id": "Redelivery",
         "title": "Redelivery",
-        "tag": "order, flow-redelivery",
+        "tag": "order flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2855,7 +2855,7 @@
       {
         "id": "ReturnItem",
         "title": "Return Item",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2883,7 +2883,7 @@
       {
         "id": "SelectReturnMethod",
         "title": "Select Return Method",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#returnMethod"
@@ -2902,7 +2902,7 @@
       {
         "id": "ReturnLabel",
         "title": "Return Label",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2921,7 +2921,7 @@
       {
         "id": "RefundStatus",
         "title": "Refund Status",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -2940,7 +2940,7 @@
       {
         "id": "BuyAgain",
         "title": "Buy Again",
-        "tag": "order, flow-purchase",
+        "tag": "order flow-purchase",
         "descriptor": [
           {
             "href": "#purchaseHistoryItem"
@@ -3232,7 +3232,7 @@
       {
         "id": "Login",
         "title": "Login",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -3257,7 +3257,7 @@
       {
         "id": "Register",
         "title": "Register",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -3276,7 +3276,7 @@
       {
         "id": "ForgotPassword",
         "title": "Forgot Password",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -3292,7 +3292,7 @@
       {
         "id": "CustomerService",
         "title": "Customer Service",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#goHome"
@@ -3320,7 +3320,7 @@
       {
         "id": "FaqCategories",
         "title": "FAQ Categories",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#faqCategoryId"
@@ -3339,7 +3339,7 @@
       {
         "id": "FaqList",
         "title": "FAQ List",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#faqCategoryId"
@@ -3374,7 +3374,7 @@
       {
         "id": "FaqDetail",
         "title": "FAQ Detail",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#faqQuestion"
@@ -3402,7 +3402,7 @@
       {
         "id": "SelectInquiryTopic",
         "title": "Select Inquiry Topic",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -3424,7 +3424,7 @@
       {
         "id": "SelectOrder",
         "title": "Select Order",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#OrderSummary"
@@ -3440,7 +3440,7 @@
       {
         "id": "InquiryForm",
         "title": "Inquiry Form",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -3468,7 +3468,7 @@
       {
         "id": "InquiryComplete",
         "title": "Inquiry Complete",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryId"
@@ -3522,7 +3522,7 @@
       {
         "id": "InquiryDetail",
         "title": "Inquiry Detail",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryId"
@@ -3581,7 +3581,7 @@
       {
         "id": "ChatLobby",
         "title": "Chat Lobby",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -3609,7 +3609,7 @@
       {
         "id": "SelectChatTopic",
         "title": "Select Chat Topic",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -3625,7 +3625,7 @@
       {
         "id": "BotChat",
         "title": "Bot Chat",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -3650,7 +3650,7 @@
       {
         "id": "LiveChat",
         "title": "Live Chat",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -3694,7 +3694,7 @@
       {
         "id": "ChatEnd",
         "title": "Chat End",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -3716,7 +3716,7 @@
       {
         "id": "ClaimList",
         "title": "Claim List",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#ClaimSummary"
@@ -3738,7 +3738,7 @@
       {
         "id": "ClaimSummary",
         "title": "Claim Summary",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -3760,7 +3760,7 @@
       {
         "id": "FileNewClaim",
         "title": "File New Claim",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#orderId"
@@ -3791,7 +3791,7 @@
       {
         "id": "SelectClaimOrder",
         "title": "Select Claim Order",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#OrderSummary"
@@ -3807,7 +3807,7 @@
       {
         "id": "ClaimDetail",
         "title": "Claim Detail",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -3865,7 +3865,7 @@
       {
         "id": "ClaimResolved",
         "title": "Claim Resolved",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -3901,7 +3901,7 @@
         "type": "safe",
         "rt": "#SearchResults",
         "title": "Search",
-        "tag": "search, flow-purchase",
+        "tag": "search flow-purchase",
         "descriptor": [
           {
             "href": "#searchQuery"
@@ -3937,7 +3937,7 @@
         "type": "safe",
         "rt": "#ProductDetail",
         "title": "Go to Product Detail",
-        "tag": "product, flow-purchase",
+        "tag": "product flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -4093,7 +4093,7 @@
         "type": "safe",
         "rt": "#ReviewList",
         "title": "Go to Review List",
-        "tag": "review, flow-review",
+        "tag": "review flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -4105,7 +4105,7 @@
         "type": "safe",
         "rt": "#WriteReview",
         "title": "Go to Write Review",
-        "tag": "review, flow-review",
+        "tag": "review flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -4129,7 +4129,7 @@
         "type": "safe",
         "rt": "#Cart",
         "title": "Go to Cart",
-        "tag": "cart, flow-purchase"
+        "tag": "cart flow-purchase"
       },
       {
         "id": "goSavedItems",
@@ -4155,28 +4155,28 @@
         "type": "safe",
         "rt": "#Checkout",
         "title": "Go to Checkout",
-        "tag": "checkout, flow-purchase"
+        "tag": "checkout flow-purchase"
       },
       {
         "id": "goSelectAddress",
         "type": "safe",
         "rt": "#SelectAddress",
         "title": "Go to Select Address",
-        "tag": "checkout, flow-purchase"
+        "tag": "checkout flow-purchase"
       },
       {
         "id": "goAddAddress",
         "type": "safe",
         "rt": "#AddAddress",
         "title": "Go to Add Address",
-        "tag": "checkout, account"
+        "tag": "checkout account"
       },
       {
         "id": "goEditAddress",
         "type": "safe",
         "rt": "#EditAddress",
         "title": "Go to Edit Address",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#addressId"
@@ -4202,7 +4202,7 @@
         "type": "safe",
         "rt": "#SelectDelivery",
         "title": "Go to Select Delivery",
-        "tag": "checkout, flow-purchase"
+        "tag": "checkout flow-purchase"
       },
       {
         "id": "goScheduleDelivery",
@@ -4216,14 +4216,14 @@
         "type": "safe",
         "rt": "#SelectPayment",
         "title": "Go to Select Payment",
-        "tag": "checkout, flow-purchase"
+        "tag": "checkout flow-purchase"
       },
       {
         "id": "goAddCard",
         "type": "safe",
         "rt": "#AddCard",
         "title": "Go to Add Card",
-        "tag": "checkout, account"
+        "tag": "checkout account"
       },
       {
         "id": "goConveniencePayment",
@@ -4284,7 +4284,7 @@
         "type": "safe",
         "rt": "#TrackPackage",
         "title": "Go to Track Package",
-        "tag": "order, flow-redelivery",
+        "tag": "order flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4296,7 +4296,7 @@
         "type": "safe",
         "rt": "#Redelivery",
         "title": "Go to Redelivery",
-        "tag": "order, flow-redelivery",
+        "tag": "order flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4332,7 +4332,7 @@
         "type": "safe",
         "rt": "#ReturnItem",
         "title": "Go to Return Item",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4347,7 +4347,7 @@
         "type": "safe",
         "rt": "#SelectReturnMethod",
         "title": "Go to Select Return Method",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4362,7 +4362,7 @@
         "type": "safe",
         "rt": "#ReturnLabel",
         "title": "Go to Return Label",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4374,7 +4374,7 @@
         "type": "safe",
         "rt": "#RefundStatus",
         "title": "Go to Refund Status",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -4464,42 +4464,42 @@
         "type": "safe",
         "rt": "#Login",
         "title": "Go to Login",
-        "tag": "account, flow-register"
+        "tag": "account flow-register"
       },
       {
         "id": "goRegister",
         "type": "safe",
         "rt": "#Register",
         "title": "Go to Register",
-        "tag": "account, flow-register"
+        "tag": "account flow-register"
       },
       {
         "id": "goForgotPassword",
         "type": "safe",
         "rt": "#ForgotPassword",
         "title": "Go to Forgot Password",
-        "tag": "account, flow-register"
+        "tag": "account flow-register"
       },
       {
         "id": "goCustomerService",
         "type": "safe",
         "rt": "#CustomerService",
         "title": "Go to Customer Service",
-        "tag": "support, flow-support"
+        "tag": "support flow-support"
       },
       {
         "id": "goFaqCategories",
         "type": "safe",
         "rt": "#FaqCategories",
         "title": "Go to FAQ Categories",
-        "tag": "support, flow-support"
+        "tag": "support flow-support"
       },
       {
         "id": "goFaqList",
         "type": "safe",
         "rt": "#FaqList",
         "title": "Go to FAQ List",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#faqCategoryId"
@@ -4511,7 +4511,7 @@
         "type": "safe",
         "rt": "#FaqDetail",
         "title": "Go to FAQ Detail",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#faqCategoryId"
@@ -4526,14 +4526,14 @@
         "type": "safe",
         "rt": "#SelectInquiryTopic",
         "title": "Go to Select Inquiry Topic",
-        "tag": "support, flow-support"
+        "tag": "support flow-support"
       },
       {
         "id": "goSelectOrder",
         "type": "safe",
         "rt": "#SelectOrder",
         "title": "Go to Select Order",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -4545,7 +4545,7 @@
         "type": "safe",
         "rt": "#InquiryForm",
         "title": "Go to Inquiry Form",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -4567,7 +4567,7 @@
         "type": "safe",
         "rt": "#InquiryDetail",
         "title": "Go to Inquiry Detail",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryId"
@@ -4579,21 +4579,21 @@
         "type": "safe",
         "rt": "#ChatLobby",
         "title": "Go to Start Chat",
-        "tag": "support, flow-support"
+        "tag": "support flow-support"
       },
       {
         "id": "goSelectChatTopic",
         "type": "safe",
         "rt": "#SelectChatTopic",
         "title": "Go to Select Chat Topic",
-        "tag": "support, flow-support"
+        "tag": "support flow-support"
       },
       {
         "id": "goChatLobby",
         "type": "safe",
         "rt": "#ChatLobby",
         "title": "Go to Chat Lobby",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -4605,14 +4605,14 @@
         "type": "safe",
         "rt": "#ClaimList",
         "title": "Go to Claim List",
-        "tag": "support, flow-claim"
+        "tag": "support flow-claim"
       },
       {
         "id": "goClaimDetail",
         "type": "safe",
         "rt": "#ClaimDetail",
         "title": "Go to Claim Detail",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -4624,21 +4624,21 @@
         "type": "safe",
         "rt": "#FileNewClaim",
         "title": "Go to File New Claim",
-        "tag": "support, flow-claim"
+        "tag": "support flow-claim"
       },
       {
         "id": "goSelectClaimOrder",
         "type": "safe",
         "rt": "#SelectClaimOrder",
         "title": "Go to Select Claim Order",
-        "tag": "support, flow-claim"
+        "tag": "support flow-claim"
       },
       {
         "id": "doLogin",
         "type": "unsafe",
         "rt": "#Home",
         "title": "Login",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -4653,7 +4653,7 @@
         "type": "unsafe",
         "rt": "#Home",
         "title": "Register",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -4668,7 +4668,7 @@
         "type": "unsafe",
         "rt": "#Login",
         "title": "Reset Password",
-        "tag": "account, flow-register",
+        "tag": "account flow-register",
         "descriptor": [
           {
             "href": "#email"
@@ -4739,7 +4739,7 @@
         "type": "unsafe",
         "rt": "#Cart",
         "title": "Add to Cart",
-        "tag": "cart, flow-purchase",
+        "tag": "cart flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -4757,7 +4757,7 @@
         "type": "unsafe",
         "rt": "#Cart",
         "title": "Add Bundle to Cart",
-        "tag": "cart, flow-purchase",
+        "tag": "cart flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -4772,7 +4772,7 @@
         "type": "unsafe",
         "rt": "#Checkout",
         "title": "Buy Now",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -4790,7 +4790,7 @@
         "type": "unsafe",
         "rt": "#OrderComplete",
         "title": "One-Click Buy",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -4925,7 +4925,7 @@
         "type": "unsafe",
         "rt": "#ReviewList",
         "title": "Submit Review",
-        "tag": "review, flow-review",
+        "tag": "review flow-review",
         "descriptor": [
           {
             "href": "#productId"
@@ -5118,7 +5118,7 @@
         "type": "idempotent",
         "rt": "#Checkout",
         "title": "Select Address",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#addressId"
@@ -5130,7 +5130,7 @@
         "type": "unsafe",
         "rt": "#SelectAddress",
         "title": "Save Address",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#recipientName"
@@ -5163,7 +5163,7 @@
         "type": "idempotent",
         "rt": "#SelectAddress",
         "title": "Update Address",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#addressId"
@@ -5250,7 +5250,7 @@
         "type": "idempotent",
         "rt": "#Checkout",
         "title": "Select Delivery Option",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#deliveryDate"
@@ -5280,7 +5280,7 @@
         "type": "idempotent",
         "rt": "#Checkout",
         "title": "Select Payment Method",
-        "tag": "checkout, flow-purchase",
+        "tag": "checkout flow-purchase",
         "descriptor": [
           {
             "href": "#paymentMethodId"
@@ -5292,7 +5292,7 @@
         "type": "unsafe",
         "rt": "#SelectPayment",
         "title": "Save Card",
-        "tag": "checkout, account",
+        "tag": "checkout account",
         "descriptor": [
           {
             "href": "#cardNumber"
@@ -5409,7 +5409,7 @@
         "type": "unsafe",
         "rt": "#OrderComplete",
         "title": "Place Order",
-        "tag": "checkout, flow-purchase"
+        "tag": "checkout flow-purchase"
       },
       {
         "id": "doCancelOrder",
@@ -5440,7 +5440,7 @@
         "type": "unsafe",
         "rt": "#ReturnItem",
         "title": "Return Item",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -5458,7 +5458,7 @@
         "type": "idempotent",
         "rt": "#ReturnItem",
         "title": "Select Return Method",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#returnMethod"
@@ -5470,7 +5470,7 @@
         "type": "unsafe",
         "rt": "#ReturnLabel",
         "title": "Submit Return",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -5491,7 +5491,7 @@
         "type": "safe",
         "rt": "#ReturnLabel",
         "title": "Print Label",
-        "tag": "order, flow-return",
+        "tag": "order flow-return",
         "descriptor": [
           {
             "href": "#orderId"
@@ -5503,7 +5503,7 @@
         "type": "unsafe",
         "rt": "#Cart",
         "title": "Buy Again",
-        "tag": "order, flow-purchase",
+        "tag": "order flow-purchase",
         "descriptor": [
           {
             "href": "#productId"
@@ -5527,7 +5527,7 @@
         "type": "unsafe",
         "rt": "#TrackPackage",
         "title": "Schedule Redelivery",
-        "tag": "order, flow-redelivery",
+        "tag": "order flow-redelivery",
         "descriptor": [
           {
             "href": "#orderId"
@@ -5735,7 +5735,7 @@
         "type": "unsafe",
         "rt": "#InquiryComplete",
         "title": "Submit Inquiry",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -5759,7 +5759,7 @@
         "type": "unsafe",
         "rt": "#InquiryDetail",
         "title": "Reply to Inquiry",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryId"
@@ -5789,7 +5789,7 @@
         "type": "unsafe",
         "rt": "#BotChat",
         "title": "Start Bot Chat",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#inquiryCategory"
@@ -5804,7 +5804,7 @@
         "type": "unsafe",
         "rt": "#BotChat",
         "title": "Send Message to Bot",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -5819,7 +5819,7 @@
         "type": "unsafe",
         "rt": "#LiveChat",
         "title": "Request Agent",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -5831,7 +5831,7 @@
         "type": "unsafe",
         "rt": "#LiveChat",
         "title": "Send Chat Message",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -5846,7 +5846,7 @@
         "type": "unsafe",
         "rt": "#LiveChat",
         "title": "Upload File",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -5861,7 +5861,7 @@
         "type": "unsafe",
         "rt": "#ChatEnd",
         "title": "End Chat",
-        "tag": "support, flow-support",
+        "tag": "support flow-support",
         "descriptor": [
           {
             "href": "#chatSessionId"
@@ -5891,7 +5891,7 @@
         "type": "unsafe",
         "rt": "#ClaimDetail",
         "title": "Submit Claim",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#orderId"
@@ -5915,7 +5915,7 @@
         "type": "unsafe",
         "rt": "#ClaimDetail",
         "title": "Add Evidence",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -5930,7 +5930,7 @@
         "type": "unsafe",
         "rt": "#ClaimDetail",
         "title": "Respond to Claim",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -5945,7 +5945,7 @@
         "type": "unsafe",
         "rt": "#ClaimDetail",
         "title": "Escalate to Amazon",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
@@ -5957,7 +5957,7 @@
         "type": "unsafe",
         "rt": "#CustomerService",
         "title": "Submit Claim Feedback",
-        "tag": "support, flow-claim",
+        "tag": "support flow-claim",
         "descriptor": [
           {
             "href": "#claimId"
