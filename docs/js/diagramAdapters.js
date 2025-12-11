@@ -882,8 +882,9 @@ function centerSvgScroll() {
     }
 }
 
-// Run once when DOM is ready
+// Run once when DOM is ready and on window resize
 document.addEventListener('DOMContentLoaded', autoSelectSizeMode);
+window.addEventListener('resize', autoSelectSizeMode);
 </script>
 </body></html>`;
                     const blob = new Blob([html], { type: 'text/html' });
