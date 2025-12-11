@@ -401,28 +401,36 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     applyViewMode(mode) {
         const iframe = document.getElementById('preview-frame');
+        const editorContainer = document.getElementById('editor-container');
+
+        // Handle editor visibility for preview mode
+        if (editorContainer) {
+            editorContainer.style.display = mode === 'preview' ? 'none' : '';
+        }
+
         if (!iframe?.contentDocument) return;
 
         const doc = iframe.contentDocument;
+        const isDiagramOnly = mode === 'diagram';
         const elementsToToggle = doc.querySelectorAll('.legend, table, h2, .selector-container');
         const linksSection = doc.querySelector('h2 + ul'); // Links section
 
         elementsToToggle.forEach(el => {
-            el.style.display = mode === 'diagram' ? 'none' : '';
+            el.style.display = isDiagramOnly ? 'none' : '';
         });
         if (linksSection) {
-            linksSection.style.display = mode === 'diagram' ? 'none' : '';
+            linksSection.style.display = isDiagramOnly ? 'none' : '';
         }
 
         // Hide h1 title and doc paragraph in diagram mode
         const title = doc.querySelector('h1');
         const docPara = doc.querySelector('h1 + p');
-        if (title) title.style.display = mode === 'diagram' ? 'none' : '';
-        if (docPara) docPara.style.display = mode === 'diagram' ? 'none' : '';
+        if (title) title.style.display = isDiagramOnly ? 'none' : '';
+        if (docPara) docPara.style.display = isDiagramOnly ? 'none' : '';
 
         // Hide diagram controls in diagram mode (Label/Size selectors)
         const controls = doc.querySelector('.diagram-controls');
-        if (controls) controls.style.display = mode === 'diagram' ? 'none' : '';
+        if (controls) controls.style.display = isDiagramOnly ? 'none' : '';
     }
 
     handleApiError(errorResponse) {

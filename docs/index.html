@@ -23,11 +23,20 @@
     <div id="title">ALPS Online Editor - Static</div>
     <div id="controls">
         <span id="fileTypeDisplay"></span>
-        <select id="diagramAdapter" disabled title="Static version - Diagram mode only">
-            <option value="alps2dot">Diagram (Static)</option>
+        <select id="viewMode">
+            <option value="document">Document</option>
+            <option value="diagram">Diagram</option>
+            <option value="preview">Preview</option>
         </select>
         <span id="validationMark"></span>
-        <button id="downloadBtn">Download</button>
+        <details class="download-menu">
+            <summary>Download</summary>
+            <div class="download-options">
+                <button id="downloadHtml">HTML</button>
+                <button id="downloadSvg">SVG</button>
+                <button id="downloadProfile">Profile</button>
+            </div>
+        </details>
     </div>
 </div>
 <div id="main-container">
