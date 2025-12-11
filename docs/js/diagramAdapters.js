@@ -326,7 +326,7 @@ table .legend{background-color:transparent;padding:0;margin:0;display:inline-fle
     background-image:repeating-linear-gradient(45deg,#FF4136,#FF4136 4px,#FF725C 4px,#FF725C 8px);
 }
 .legend-icon.idempotent{
-    background-color:#FFDC00;
+    background-color:#D4A000;
     background-image:radial-gradient(#FFB700 20%,transparent 20%),radial-gradient(#FFB700 20%,transparent 20%);
     background-size:8px 8px;
     background-position:0 0,4px 4px;
@@ -345,7 +345,7 @@ table .legend{background-color:transparent;padding:0;margin:0;display:inline-fle
     background-image:repeating-linear-gradient(45deg,#FF4136,#FF4136 3px,#FF725C 3px,#FF725C 6px);
 }
 .type-indicator-small.idempotent{
-    background-color:#FFDC00;
+    background-color:#D4A000;
     background-image:radial-gradient(#FFB700 20%,transparent 20%),radial-gradient(#FFB700 20%,transparent 20%);
     background-size:6px 6px;
     background-position:0 0,3px 3px;
@@ -822,7 +822,7 @@ function getTransitionColor(type) {
     switch (type) {
         case 'safe': return '#00A86B';
         case 'unsafe': return '#FF4136';
-        case 'idempotent': return '#FFDC00';
+        case 'idempotent': return '#D4A000';
         default: return '#000000';
     }
 }
@@ -1151,7 +1151,7 @@ window.addEventListener('resize', autoSelectSizeMode);
         switch (type) {
             case 'safe': return '#00A86B';
             case 'unsafe': return '#FF4136';
-            case 'idempotent': return '#FFDC00';
+            case 'idempotent': return '#D4A000';
             default: return '#000000';
         }
     }
