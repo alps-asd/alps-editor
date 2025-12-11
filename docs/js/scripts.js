@@ -122,7 +122,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         example for ALPS implementation in online shopping contexts.</doc>
 
     <!-- Links -->
-    <link rel="help" href="https://alps-asd.github.io/alps-editor/user-guide.html" title="ALPS Editor User Guide"/>
+    <link rel="help" href="user-guide.html" title="ALPS Editor User Guide"/>
     <link rel="help" href="https://www.app-state-diagram.com/" title="app-state-diagram"/>
     <link rel="help" href="https://alps.io/spec/" title="ALPS Specification"/>
     <link rel="describedby" href="https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html" title="Vocabulary Guide"/>
