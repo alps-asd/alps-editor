@@ -68,6 +68,7 @@ class AlpsEditor {
             this.setupCompleteHref();
             this.setupDownloadButton();
             this.setupAdapterSelector();
+            this.setupViewModeSelector();
             this.setupDiagramClickHandler();
             this.setupEditorSelectionHandler();
         });
@@ -79,6 +80,7 @@ class AlpsEditor {
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
             enableSnippets: true,
+            wrap: true,
         });
     }
 
@@ -89,19 +91,24 @@ class AlpsEditor {
 <!--
 Welcome to Alps Editor! Let's make API design fun and effective.
 
+Keyboard shortcuts:
+- F1: Show command palette (lists all shortcuts)
+- F8: Toggle Preview mode
+- Ctrl + Space: Show auto-completion snippets
+- Ctrl + S: Download your work
+
 Quick tips:
-- Press Ctrl + Space to show snippets for auto-completion (suggested terms are from Schema.org)
-- To start from scratch, delete all content and press Ctrl + Space, then select "Skeleton"
-  (For JSON format, type "{" first)
-- Drag and drop an ALPS file (JSON, XML, or HTML) into the editor to open it
-  (For HTML files, the ALPS profile contained within will be extracted)
-- Hit Ctrl + S to download your work anytime
+- To start from scratch, clear content and press Ctrl + Space, then select "Skeleton"
+- Drag and drop an ALPS file (JSON, XML, or HTML) to open it
 
 ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
 
-Learn more about ALPS:
-- Official ALPS website: http://alps.io/
+Learn more:
+- User Guide: https://alps-asd.github.io/alps-editor/user-guide.html
+- ALPS Editor: https://github.com/alps-asd/alps-editor
+- ALPS Specification: https://alps.io/
 - app-state-diagram: https://www.app-state-diagram.com/
+- Vocabulary: https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html
 
 Happy modeling! Remember, solid semantics supports the long-term evolution of your APIs. :)
 -->
@@ -114,6 +121,12 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         shopping cart management, and checkout process, serving as an educational
         example for ALPS implementation in online shopping contexts.</doc>
 
+    <!-- Links -->
+    <link rel="help" href="https://alps-asd.github.io/alps-editor/user-guide.html" title="ALPS Editor User Guide"/>
+    <link rel="help" href="https://www.app-state-diagram.com/" title="app-state-diagram"/>
+    <link rel="help" href="https://alps.io/spec/" title="ALPS Specification"/>
+    <link rel="describedby" href="https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html" title="Vocabulary Guide"/>
+
     <!-- Ontology -->
     <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
     <descriptor id="name" def="https://schema.org/name" title="name"/>
@@ -122,73 +135,111 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     <descriptor id="quantity" def="https://schema.org/Quantity" title="quantity"/>
     <descriptor id="email" def="https://schema.org/email" title="email"/>
     <descriptor id="address" def="https://schema.org/address" title="address"/>
+    <descriptor id="reviewBody" def="https://schema.org/reviewBody" title="review text"/>
+    <descriptor id="rating" def="https://schema.org/ratingValue" title="rating"/>
 
     <!-- Taxonomy -->
-    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection">
+    <descriptor id="Home" title="Home Page" tag="flow-browse">
+        <descriptor href="#goProductList"/>
+    </descriptor>
+
+    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection, flow-browse">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
         <descriptor href="#goProductDetail"/>
         <descriptor href="#goCart"/>
-        <descriptor href="#goProductList"/>
     </descriptor>
 
-    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item">
+    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item, flow-browse, flow-purchase, flow-review">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
         <descriptor href="#price"/>
         <descriptor href="#goProductList"/>
         <descriptor href="#doAddToCart"/>
+        <descriptor href="#goReviewForm"/>
     </descriptor>
 
-    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection">
+    <descriptor id="ReviewForm" def="https://schema.org/Review" title="Review Form" tag="flow-review">
         <descriptor href="#id"/>
+        <descriptor href="#reviewBody"/>
+        <descriptor href="#rating"/>
+        <descriptor href="#goProductDetail"/>
+        <descriptor href="#doSubmitReview"/>
+    </descriptor>
+
+    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection, flow-purchase">
+        <descriptor href="#id"/>
+        <descriptor href="#name"/>
+        <descriptor href="#price"/>
+        <descriptor href="#quantity"/>
         <descriptor href="#goProductList"/>
+        <descriptor href="#goProductDetail"/>
         <descriptor href="#goCheckout"/>
         <descriptor href="#doUpdateQuantity"/>
         <descriptor href="#doRemoveItem"/>
     </descriptor>
 
-    <descriptor id="Checkout" title="Checkout">
+    <descriptor id="Checkout" title="Checkout" tag="flow-purchase">
+        <doc>Available only when cart has at least one item. Guest users can proceed without account.</doc>
+        <descriptor href="#price"/>
         <descriptor href="#email"/>
         <descriptor href="#address"/>
+        <descriptor href="#goCart"/>
         <descriptor href="#goPayment"/>
     </descriptor>
 
-    <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment">
+    <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment" tag="flow-purchase">
+        <descriptor href="#price"/>
+        <descriptor href="#goCart"/>
         <descriptor href="#doPayment"/>
     </descriptor>
 
     <!-- Choreography -->
-    <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list">
+    <descriptor id="goProductList" type="safe" rt="#ProductList" rel="collection" title="View product list"/>
+
+    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" rel="item" title="View product details">
         <descriptor href="#id"/>
     </descriptor>
 
-    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
-        <descriptor href="#id"/>
-    </descriptor>
-
-    <descriptor id="goCart" type="safe" rt="#Cart" title="View shopping cart"/>
+    <descriptor id="goCart" type="safe" rt="#Cart" rel="collection" title="View shopping cart"/>
 
     <descriptor id="goCheckout" type="safe" rt="#Checkout" title="Proceed to checkout"/>
 
     <descriptor id="goPayment" type="safe" rt="#Payment" title="Proceed to payment"/>
 
-    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add product to cart">
+    <descriptor id="goReviewForm" type="safe" rt="#ReviewForm" title="Write a review">
+        <descriptor href="#id"/>
+    </descriptor>
+
+    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add to cart">
+        <doc>Adds product to cart. If the same product already exists, increments quantity instead of creating a duplicate entry.</doc>
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
 
     <descriptor id="doUpdateQuantity" type="idempotent" rt="#Cart" title="Update item quantity">
+        <doc>Updates the quantity of an item in the cart. Set to 0 to remove.</doc>
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
+
     <descriptor id="doRemoveItem" type="idempotent" rt="#Cart" title="Remove item from cart">
+        <doc>Removes the specified item from the cart completely.</doc>
         <descriptor href="#id"/>
     </descriptor>
 
-    <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
+    <descriptor id="doSubmitReview" type="unsafe" rt="#ProductDetail" title="Submit review">
+        <doc>Submits a product review with rating and comment.</doc>
+        <descriptor href="#id"/>
+        <descriptor href="#reviewBody"/>
+        <descriptor href="#rating"/>
+    </descriptor>
+
+    <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment">
+        <doc>Processes payment and completes the order. Clears the cart on success.</doc>
+    </descriptor>
 
 </alps>`;
 
@@ -221,7 +272,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                     }
                 };
             } else {
-                const schemaResponse = await axios.get('alps.json');
+                const schemaResponse = await axios.get('schemas/alps.json');
                 this.alpsSchema = schemaResponse.data;
             }
         } catch (error) {
@@ -246,9 +297,32 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         document.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === 's') {
                 event.preventDefault();
-                document.getElementById('downloadBtn').click();
+                // Ctrl+S saves Profile (ALPS source)
+                document.getElementById('downloadProfile')?.click();
+            }
+            // F8 toggles Preview mode on/off (returns to previous mode)
+            if (event.key === 'F8') {
+                event.preventDefault();
+                this.togglePreviewMode();
             }
         });
+    }
+
+    togglePreviewMode() {
+        const selector = document.getElementById('viewMode');
+        if (!selector) return;
+
+        if (selector.value === 'preview') {
+            // Return to previous mode (stored before entering preview)
+            const previousMode = this.previousViewMode || 'document';
+            selector.value = previousMode;
+            this.applyViewMode(previousMode);
+        } else {
+            // Save current mode and switch to preview
+            this.previousViewMode = selector.value;
+            selector.value = 'preview';
+            this.applyViewMode('preview');
+        }
     }
 
     setupDragAndDrop() {
@@ -347,7 +421,13 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             // Use the adapter manager to generate diagram
             const url = await this.adapterManager.generateDiagram(content, fileType);
 
-            document.getElementById('preview-frame').src = url;
+            const iframe = document.getElementById('preview-frame');
+            iframe.src = url;
+            // Apply view mode after iframe loads
+            iframe.onload = () => {
+                const mode = document.getElementById('viewMode')?.value || 'document';
+                this.applyViewMode(mode);
+            };
             this.debugLog('Preview updated');
             this.updateValidationMark(true);
             this.displayErrors([]);
@@ -366,83 +446,55 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     }
 
     setupAdapterSelector() {
-        const selector = document.getElementById('diagramAdapter');
+        // Always use alps2dot adapter
+        this.adapterManager.setAdapter('alps2dot');
+    }
 
-        if (this.isLocalMode || this.isStaticMode) {
-            // ローカルモードまたはstatic hostingではDiagramのみ利用可能
-            this.adapterManager.setAdapter('alps2dot');
-            selector.value = 'alps2dot';
-            selector.disabled = true;
-            selector.title = this.isStaticMode ? 'Static版ではDiagramモードのみ利用可能です' : 'ローカルモードではDiagramモードのみ利用可能です';
-        } else {
-            // Set current value
-            selector.value = this.adapterManager.currentAdapter;
-        }
+    setupViewModeSelector() {
+        const selector = document.getElementById('viewMode');
+        if (!selector) return;
 
-        // Handle changes
+        // Always start with Document mode (default)
+        selector.value = 'document';
+
         selector.addEventListener('change', (event) => {
-            const newAdapter = event.target.value;
-            if (this.adapterManager.setAdapter(newAdapter)) {
-                this.debugLog(`Switched to ${newAdapter} adapter`);
-                // Regenerate preview with new adapter
-                this.validateAndPreview();
-            }
+            const mode = event.target.value;
+            this.applyViewMode(mode);
         });
     }
 
-    handleApiError(errorResponse) {
-        const decoder = new TextDecoder('utf-8');
-        let errorData;
+    applyViewMode(mode) {
+        const iframe = document.getElementById('preview-frame');
+        const editorContainer = document.getElementById('editor-container');
 
-        try {
-            const decodedData = decoder.decode(errorResponse.data);
-            errorData = JSON.parse(decodedData);
-        } catch (parseError) {
-            this.handleError(parseError, 'Error parsing error response');
-            errorData = { 'error-message': 'Unknown error occurred' };
+        // Handle editor visibility for preview mode
+        if (editorContainer) {
+            editorContainer.style.display = mode === 'preview' ? 'none' : '';
         }
 
-        if (errorData && errorData['error-message']) {
-            return errorData['invalid-descriptor'] ? this.addInvalidWordAnnotations(errorData, this.editor.getValue()) : [{
-                row: errorData['line'] ? errorData['line'] - 1 : 0,
-                column: 0,
-                text: `API Error (${errorResponse.status}): ${errorData['error-message']}`,
-                type: 'error'
-            }];
-        } else {
-            return [{
-                row: 0,
-                column: 0,
-                text: `API Error (${errorResponse.status}): ${errorData['class'] || ''}:${errorData['exception-message'] || 'Unknown error'}`,
-                type: 'error'
-            }];
-        }
-    }
+        if (!iframe?.contentDocument) return;
 
-    addInvalidWordAnnotations(errorData, content) {
-        const invalidDescriptor = errorData['invalid-descriptor'];
-        const searchWord = '"#' + invalidDescriptor + '"';
-        const errors = [];
+        const doc = iframe.contentDocument;
+        const isDiagramOnly = mode === 'diagram';
+        const elementsToToggle = doc.querySelectorAll('.legend, table, h2, .selector-container');
+        const linksSection = doc.querySelector('h2 + ul'); // Links section
 
-        if (invalidDescriptor) {
-            content.split('\n').forEach((line, index) => {
-                if (line.includes(searchWord)) {
-                    errors.push({
-                        row: index,
-                        column: line.indexOf(searchWord),
-                        text: `API Error: ${errorData['error-message']} ("${invalidDescriptor}")`,
-                        type: 'error'
-                    });
-                }
-            });
+        elementsToToggle.forEach(el => {
+            el.style.display = isDiagramOnly ? 'none' : '';
+        });
+        if (linksSection) {
+            linksSection.style.display = isDiagramOnly ? 'none' : '';
         }
 
-        return errors.length ? errors : [{
-            row: 0,
-            column: 0,
-            text: `API Error: ${errorData['error-message']}`,
-            type: 'error'
-        }];
+        // Hide h1 title and doc paragraph in diagram mode
+        const title = doc.querySelector('h1');
+        const docPara = doc.querySelector('h1 + p');
+        if (title) title.style.display = isDiagramOnly ? 'none' : '';
+        if (docPara) docPara.style.display = isDiagramOnly ? 'none' : '';
+
+        // Hide diagram controls in diagram mode (Label/Size selectors)
+        const controls = doc.querySelector('.diagram-controls');
+        if (controls) controls.style.display = isDiagramOnly ? 'none' : '';
     }
 
     displayErrors(errors) {
@@ -568,56 +620,69 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     }
 
     updateValidationMark(isValid) {
-        document.getElementById('validationMark').textContent = isValid ? '✅' : '❌';
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            if (isValid) {
+                downloadBtn.classList.remove('disabled');
+            } else {
+                downloadBtn.classList.add('disabled');
+            }
+        }
     }
 
     setupDownloadButton() {
-        document.getElementById('downloadBtn').addEventListener('click', async () => {
-            const content = this.editor.getValue();
-            const fileType = this.detectFileType(content);
-
-            if (this.isLocalMode || this.isStaticMode) {
-                // Static版では単純にALPSファイルをダウンロード
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                this.debugLog('ALPS profile downloaded');
+        // HTML download - get from iframe (Profile already embedded as hidden)
+        document.getElementById('downloadHtml')?.addEventListener('click', () => {
+            const iframe = document.getElementById('preview-frame');
+            if (!iframe?.contentDocument) {
+                alert('No preview available');
                 return;
             }
-
-            try {
-                this.debugLog('Starting API request...');
-                const response = await axios.post('/api/', content, {
-                    headers: { 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml' },
-                    responseType: 'arraybuffer',
-                });
-
-                this.debugLog('API response received');
-
-                const blob = new Blob([response.data], { type: 'text/html' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'alps.html';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                this.debugLog('Download completed');
-
-                this.updateValidationMark(true);
-            } catch (error) {
-                this.handleError(error, 'API request failed');
-                this.updateValidationMark(false);
-                this.debugLog(`Error: ${error.message}`);
-            }
+            const html = '<!DOCTYPE html>' + iframe.contentDocument.documentElement.outerHTML;
+            this.downloadFile(html, 'alps.html', 'text/html');
+            this.closeDownloadMenu();
         });
+
+        // SVG download - extract from iframe
+        document.getElementById('downloadSvg')?.addEventListener('click', () => {
+            const iframe = document.getElementById('preview-frame');
+            const svg = iframe?.contentDocument?.querySelector('#svg-graph svg');
+            if (!svg) {
+                alert('No SVG available');
+                return;
+            }
+            const svgData = new XMLSerializer().serializeToString(svg);
+            this.downloadFile(svgData, 'alps-diagram.svg', 'image/svg+xml');
+            this.closeDownloadMenu();
+        });
+
+        // Profile download - ALPS source from editor
+        document.getElementById('downloadProfile')?.addEventListener('click', () => {
+            const content = this.editor.getValue();
+            const fileType = this.detectFileType(content);
+            const filename = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
+            const mimeType = fileType === 'JSON' ? 'application/json' : 'application/xml';
+            this.downloadFile(content, filename, mimeType);
+            this.closeDownloadMenu();
+        });
+    }
+
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.debugLog(`Downloaded: ${filename}`);
+    }
+
+    closeDownloadMenu() {
+        const menu = document.querySelector('.download-menu');
+        if (menu) menu.removeAttribute('open');
     }
 
     debugLog(message) {
@@ -789,21 +854,41 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     setupDiagramClickHandler() {
         // Listen for messages from iframe diagram
         window.addEventListener('message', (event) => {
+            // Validate origin for defense-in-depth security
+            if (event.origin !== window.location.origin) return;
+
             if (event.data && event.data.type === 'jumpToId') {
                 const id = event.data.id;
                 console.log('Jumping to ID:', id);
-                this.jumpToId(id);
+
+                // In Preview mode, scroll to table row instead of editor
+                const viewMode = document.getElementById('viewMode')?.value;
+                if (viewMode === 'preview') {
+                    const iframe = document.getElementById('preview-frame');
+                    if (iframe?.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'scrollToDescriptor',
+                            id: id
+                        }, '*');
+                    }
+                } else {
+                    this.jumpToId(id);
+                }
+            }
+            // Handle F8 from iframe
+            if (event.data && event.data.type === 'togglePreview') {
+                this.togglePreviewMode();
             }
         });
     }
 
     jumpToId(id) {
         if (!this.editor || !id) return;
-        
+
         // Search for id="searchId" in the editor content
         const searchTerm = `id="${id}"`;
         console.log('Searching for:', searchTerm);
-        
+
         // Find the text first
         const range = this.editor.find(searchTerm, {
             backwards: false,
@@ -812,17 +897,17 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             wholeWord: false,
             regExp: false
         });
-        
+
         if (range) {
             // Get the line number where the match was found
             const lineNumber = range.start.row;
-            
+
             // Select the entire line
             this.editor.selection.selectLine();
-            
+
             console.log('Selected entire line:', lineNumber);
         }
-        
+
         // Focus the editor after search
         this.editor.focus();
     }

@@ -1,2 +1,3 @@
-.vercel
-vendor
+.DS_Store
+.junie/
+.claude/settings.local.json

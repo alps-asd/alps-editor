@@ -1,7 +1,6 @@
 # ALPS Online Editor
 
-
-<img src="https://www.app-state-diagram.com/images/home.png" width=100px>
+<img src="docs/images/alps-editor-hero.png" alt="ALPS Editor" style="max-width: 400px; width: 100%; height: auto; border-radius: 10px;">
 
 ALPS Online Editor is a web-based editor for creating and editing Application-Level Profile Semantics (ALPS) documents. It supports both XML and JSON formats with real-time validation, auto-completion, and live preview features.
 
@@ -9,50 +8,33 @@ ALPS Online Editor is a web-based editor for creating and editing Application-Le
 
 ### Online Version
 
-Visit [app-state-diagram.com](https://app-state-diagram.com) to use the editor directly in your browser.
+Visit [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) to use the editor directly in your browser. No server required - runs entirely client-side.
 
-### Static Version (GitHub Pages)
+📖 **[Read the User Guide](https://alps-asd.github.io/alps-editor/user-guide.html)** for detailed instructions and tips.
 
-Try the static version at [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) - no server required, works entirely in your browser with client-side diagram generation.
+## Development
 
-### Offline Usage
+### Local Server
 
-#### Prerequisites
-- PHP 8.0 or higher
-- Composer
-
-#### Installation
-
-1. Clone the repository
-2. 
 ```bash
-git clone https://github.com/alps-asd/alps-editor
-cd alps-editor
+npx serve docs
 ```
 
-2. Install dependencies
-3. 
-```bash
-composer install
-```
+Then open <http://localhost:3000>
 
-3. Start the local server
-```bash
-composer serve
-```
+### AI Agents
 
-4. Open [http://localhost:8081/](http://localhost:8081/) in your browser
+For browser testing and debugging with AI agents, see [chrome-devtools-mcp](https://github.com/anthropics/claude-code/tree/main/chrome-devtools-mcp) for setup instructions.
 
 ## Features
 
-### 🎯 Interactive Diagram Experience
+### Interactive Diagram Experience
 - **Bidirectional highlighting**: Select text in editor → elements glow in diagram
 - **Click-to-jump navigation**: Click diagram elements → jump to code line
-- **Double-click external links**: Double-click documentation links to open in new tab
-- **Dual rendering modes**: Switch between Document (ASD) and Diagram (SVG) views
+- **View modes**: Switch between Document, Diagram, and Preview views
 - **Real-time visual feedback**: Instant synchronization between editor and diagrams
 
-### 🎨 Smart Auto-Completion
+### Smart Auto-Completion
 - Press `Ctrl + Space` to show context-aware snippets
 - When starting from scratch:
     1. Clear the editor content
@@ -60,62 +42,31 @@ composer serve
     3. Choose either "ALPS XML Skeleton" or "ALPS JSON Skeleton"
     4. Fill in the placeholders using `Tab`
 
-### ✅ Real-Time Validation
+### Real-Time Validation
 - Automatic validation against ALPS schema
 - Immediate visual feedback on errors
 - Detailed error messages with line numbers
 - Live preview of the rendered ALPS document
 
-### 📁 File Management
+### File Management
 - Support for both XML and JSON ALPS formats
 - Drag and drop ALPS files directly into the editor
 - Accepts JSON, XML, and HTML files containing ALPS profiles
-- Quick save with `Ctrl + S` (or `Cmd + S` on Mac)
+- Download as HTML, SVG, or Profile (JSON/XML)
 
-### 💡 Smart Suggestions
+### Smart Suggestions
 - Context-aware descriptor completions
 - Automatic href suggestions from existing descriptors
 - Built-in semantic terms from Schema.org
 
-## Getting Started
-
-1. **Creating a New Document**
-    - Clear the editor content
-    - Press `Ctrl + Space`
-    - Select either "ALPS XML Skeleton" or "ALPS JSON Skeleton"
-    - Start filling in your API description
-
-2. **Adding Descriptors**
-    - Type at desired location
-    - Press `Ctrl + Space` for suggestions
-    - Available snippet types:
-        - Ontology (with/without href)
-        - Taxonomy
-        - Choreography (with/without parameters)
-
-3. **Opening Existing Files**
-    - Drag and drop your ALPS file into the editor
-    - Supports:
-        - `.json` (ALPS JSON format)
-        - `.xml` (ALPS XML format)
-        - `.html` (Will extract ALPS profile if present)
-
-4. **Saving Your Work**
-    - Press `Ctrl + S` (or `Cmd + S` on Mac)
-    - File will be downloaded in current format
-
 ## Keyboard Shortcuts
 
+- `F1`: Show command palette (lists all shortcuts)
+- `F8`: Toggle Preview mode
 - `Ctrl + Space`: Show auto-completion suggestions
-- `Ctrl + S` / `Cmd + S`: Save document
+- `Ctrl + S` / `Cmd + S`: Download document
 - `Tab`: Navigate through snippet placeholders
 - `Shift + Tab`: Navigate backwards through placeholders
-
-## Interactive Features
-
-- **Text selection**: Select any text in the editor to highlight corresponding elements in the diagram
-- **Click navigation**: Click on any element in the diagram to jump to its definition in the editor
-- **Mode switching**: Use the dropdown to switch between Document (server-generated) and Diagram (client-generated) views
 
 ## Validation
 
@@ -123,12 +74,9 @@ The editor performs two types of validation:
 1. Syntax validation (JSON/XML)
 2. ALPS semantic validation against the official ALPS schema
 
-Error indicators:
-- ❌ Red squiggly underline: Syntax error
-- ✅ Green checkmark: Valid ALPS document
-
 ## References
 
-- [app-state-diagram](https://www.app-state-diagram.com/)
-- [ALPS Specification](http://alps.io/)
-- [Schema.org](https://schema.org) (source for semantic terms)
+- [User Guide](https://alps-asd.github.io/alps-editor/user-guide.html) - Complete guide to using the editor
+- [app-state-diagram](https://www.app-state-diagram.com/) - ALPS visualization tool
+- [ALPS Specification](https://alps.io/) - Official ALPS documentation
+- [Vocabulary Guide](https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html) - Schema.org semantic terms for ALPS
