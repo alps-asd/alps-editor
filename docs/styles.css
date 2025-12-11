@@ -29,28 +29,74 @@ body, html {
     margin-right: 20px;
 }
 
-#diagramAdapter {
+#viewMode {
     margin-right: 15px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #555;
+    background: #333;
+    color: white;
+    cursor: pointer;
 }
 
 #validationMark {
     margin-right: 10px;
 }
 
-/* ローカルモード用のスタイル */
-#diagramAdapter:disabled {
-    background-color: #f5f5f5;
-    color: #666;
-    cursor: not-allowed;
+/* Download dropdown menu */
+.download-menu {
+    position: relative;
+    margin-left: 10px;
 }
 
-#downloadBtn {
+.download-menu summary {
     background-color: green;
     color: white;
     border: none;
     padding: 5px 10px;
     cursor: pointer;
-    margin-left: 10px;
+    list-style: none;
+    border-radius: 3px;
+}
+
+.download-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.download-menu summary::after {
+    content: " ▼";
+    font-size: 0.7em;
+}
+
+.download-menu[open] summary::after {
+    content: " ▲";
+}
+
+.download-options {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 100;
+    min-width: 100px;
+}
+
+.download-options button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    color: #333;
+}
+
+.download-options button:hover {
+    background-color: #f0f0f0;
 }
 
 #main-container {
@@ -58,8 +104,19 @@ body, html {
     height: calc(100% - 50px); /* 50pxはtop-barの高さ */
 }
 
-#editor-container, #preview-container {
+#editor-container {
+    flex: 0 0 50%;
+    max-width: 800px;
+    min-width: 200px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+}
+
+#preview-container {
     flex: 1;
+    min-width: 200px;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -68,7 +125,6 @@ body, html {
 #editor {
     width: 100%;
     flex-grow: 1;
-    border-right: 1px solid gray;
 }
 
 #preview-container {

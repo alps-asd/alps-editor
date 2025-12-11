@@ -68,6 +68,7 @@ class AlpsEditor {
             this.setupCompleteHref();
             this.setupDownloadButton();
             this.setupAdapterSelector();
+            this.setupViewModeSelector();
             this.setupDiagramClickHandler();
             this.setupEditorSelectionHandler();
         });
@@ -79,6 +80,7 @@ class AlpsEditor {
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
             enableSnippets: true,
+            wrap: true,
         });
     }
 
@@ -113,6 +115,11 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         and operations for a basic e-commerce system. It includes product listing,
         shopping cart management, and checkout process, serving as an educational
         example for ALPS implementation in online shopping contexts.</doc>
+
+    <!-- Links -->
+    <link rel="self" href="https://example.com/alps/shopping.xml"/>
+    <link rel="help" href="https://alps.io/spec/"/>
+    <link rel="describedby" href="https://schema.org/"/>
 
     <!-- Ontology -->
     <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
@@ -246,7 +253,8 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         document.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === 's') {
                 event.preventDefault();
-                document.getElementById('downloadBtn').click();
+                // Ctrl+S saves Profile (ALPS source)
+                document.getElementById('downloadProfile')?.click();
             }
         });
     }
@@ -347,7 +355,13 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             // Use the adapter manager to generate diagram
             const url = await this.adapterManager.generateDiagram(content, fileType);
 
-            document.getElementById('preview-frame').src = url;
+            const iframe = document.getElementById('preview-frame');
+            iframe.src = url;
+            // Apply view mode after iframe loads
+            iframe.onload = () => {
+                const mode = document.getElementById('viewMode')?.value || 'document';
+                this.applyViewMode(mode);
+            };
             this.debugLog('Preview updated');
             this.updateValidationMark(true);
             this.displayErrors([]);
@@ -366,28 +380,49 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     }
 
     setupAdapterSelector() {
-        const selector = document.getElementById('diagramAdapter');
+        // Always use alps2dot adapter
+        this.adapterManager.setAdapter('alps2dot');
+    }
 
-        if (this.isLocalMode || this.isStaticMode) {
-            // ローカルモードまたはstatic hostingではDiagramのみ利用可能
-            this.adapterManager.setAdapter('alps2dot');
-            selector.value = 'alps2dot';
-            selector.disabled = true;
-            selector.title = this.isStaticMode ? 'Static版ではDiagramモードのみ利用可能です' : 'ローカルモードではDiagramモードのみ利用可能です';
-        } else {
-            // Set current value
-            selector.value = this.adapterManager.currentAdapter;
+    setupViewModeSelector() {
+        const selector = document.getElementById('viewMode');
+        if (!selector) return;
+
+        // Load saved preference
+        const saved = localStorage.getItem('viewMode');
+        if (saved) selector.value = saved;
+
+        selector.addEventListener('change', (event) => {
+            const mode = event.target.value;
+            localStorage.setItem('viewMode', mode);
+            this.applyViewMode(mode);
+        });
+    }
+
+    applyViewMode(mode) {
+        const iframe = document.getElementById('preview-frame');
+        if (!iframe?.contentDocument) return;
+
+        const doc = iframe.contentDocument;
+        const elementsToToggle = doc.querySelectorAll('.legend, table, h2, .selector-container');
+        const linksSection = doc.querySelector('h2 + ul'); // Links section
+
+        elementsToToggle.forEach(el => {
+            el.style.display = mode === 'diagram' ? 'none' : '';
+        });
+        if (linksSection) {
+            linksSection.style.display = mode === 'diagram' ? 'none' : '';
         }
 
-        // Handle changes
-        selector.addEventListener('change', (event) => {
-            const newAdapter = event.target.value;
-            if (this.adapterManager.setAdapter(newAdapter)) {
-                this.debugLog(`Switched to ${newAdapter} adapter`);
-                // Regenerate preview with new adapter
-                this.validateAndPreview();
-            }
-        });
+        // Hide h1 title and doc paragraph in diagram mode
+        const title = doc.querySelector('h1');
+        const docPara = doc.querySelector('h1 + p');
+        if (title) title.style.display = mode === 'diagram' ? 'none' : '';
+        if (docPara) docPara.style.display = mode === 'diagram' ? 'none' : '';
+
+        // Hide diagram controls in diagram mode (Label/Size selectors)
+        const controls = doc.querySelector('.diagram-controls');
+        if (controls) controls.style.display = mode === 'diagram' ? 'none' : '';
     }
 
     handleApiError(errorResponse) {
@@ -572,52 +607,58 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     }
 
     setupDownloadButton() {
-        document.getElementById('downloadBtn').addEventListener('click', async () => {
-            const content = this.editor.getValue();
-            const fileType = this.detectFileType(content);
-
-            if (this.isLocalMode || this.isStaticMode) {
-                // Static版では単純にALPSファイルをダウンロード
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                this.debugLog('ALPS profile downloaded');
+        // HTML download - get from iframe (Profile already embedded as hidden)
+        document.getElementById('downloadHtml')?.addEventListener('click', () => {
+            const iframe = document.getElementById('preview-frame');
+            if (!iframe?.contentDocument) {
+                alert('No preview available');
                 return;
             }
-
-            try {
-                this.debugLog('Starting API request...');
-                const response = await axios.post('/api/', content, {
-                    headers: { 'Content-Type': fileType === 'JSON' ? 'application/json' : 'application/xml' },
-                    responseType: 'arraybuffer',
-                });
-
-                this.debugLog('API response received');
-
-                const blob = new Blob([response.data], { type: 'text/html' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'alps.html';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                this.debugLog('Download completed');
-
-                this.updateValidationMark(true);
-            } catch (error) {
-                this.handleError(error, 'API request failed');
-                this.updateValidationMark(false);
-                this.debugLog(`Error: ${error.message}`);
-            }
+            const html = '<!DOCTYPE html>' + iframe.contentDocument.documentElement.outerHTML;
+            this.downloadFile(html, 'alps.html', 'text/html');
+            this.closeDownloadMenu();
         });
+
+        // SVG download - extract from iframe
+        document.getElementById('downloadSvg')?.addEventListener('click', () => {
+            const iframe = document.getElementById('preview-frame');
+            const svg = iframe?.contentDocument?.querySelector('#svg-graph svg');
+            if (!svg) {
+                alert('No SVG available');
+                return;
+            }
+            const svgData = new XMLSerializer().serializeToString(svg);
+            this.downloadFile(svgData, 'alps-diagram.svg', 'image/svg+xml');
+            this.closeDownloadMenu();
+        });
+
+        // Profile download - ALPS source from editor
+        document.getElementById('downloadProfile')?.addEventListener('click', () => {
+            const content = this.editor.getValue();
+            const fileType = this.detectFileType(content);
+            const filename = fileType === 'JSON' ? 'alps-profile.json' : 'alps-profile.xml';
+            const mimeType = fileType === 'JSON' ? 'application/json' : 'application/xml';
+            this.downloadFile(content, filename, mimeType);
+            this.closeDownloadMenu();
+        });
+    }
+
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.debugLog(`Downloaded: ${filename}`);
+    }
+
+    closeDownloadMenu() {
+        const menu = document.querySelector('.download-menu');
+        if (menu) menu.removeAttribute('open');
     }
 
     debugLog(message) {
