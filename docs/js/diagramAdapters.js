@@ -301,7 +301,7 @@ class Alps2DotAdapter extends DiagramAdapter {
 <style>
 html{scroll-behavior:smooth;}
 body{margin:0;padding:0;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
-.markdown-body{background:#fff;padding:20px;max-width:none;margin:0 auto;overflow:visible;}
+.markdown-body{background:#fff;padding:45px;max-width:none;margin:0 auto;overflow:visible;}
 a{cursor:pointer;}
 #svg-container{display:flex;overflow-x:scroll;margin:20px 0;}
 #svg-graph{flex-shrink:0;text-align:center;}
@@ -444,6 +444,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Table link: jumpToId sent for:', id);
             }
 
+            // Highlight SVG element only for ID column links (states like goBlog, doPost, etc.)
+            // Use setTimeout to ensure highlight persists after any clearHighlights from parent
+            // Then fade out after 2 seconds
+            if (this.classList.contains('descriptor-id-link')) {
+                setTimeout(() => {
+                    highlightElementInSVG(id);
+                    setTimeout(() => fadeOutHighlightsInSVG(), 2000);
+                }, 100);
+            }
+
             // Check if this is a link to a different row (rt/Contained) or self (ID column)
             const currentRow = this.closest('tr');
             const targetRow = document.getElementById('descriptor-' + id);
@@ -575,10 +585,27 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearHighlightsInSVG() {
         const highlighted = document.querySelectorAll('.highlighted');
         highlighted.forEach(element => {
+            element.style.transition = '';
             element.style.filter = '';
             element.style.opacity = '';
             element.classList.remove('highlighted');
         });
+    }
+
+    function fadeOutHighlightsInSVG() {
+        const highlighted = document.querySelectorAll('.highlighted');
+        highlighted.forEach(element => {
+            element.style.transition = 'filter 0.5s ease-out, opacity 0.5s ease-out';
+            element.style.filter = '';
+            element.style.opacity = '';
+        });
+        // Remove class after transition completes
+        setTimeout(() => {
+            highlighted.forEach(element => {
+                element.style.transition = '';
+                element.classList.remove('highlighted');
+            });
+        }, 500);
     }
     
     // Also try with regular click event on the whole document

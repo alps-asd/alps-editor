@@ -211,7 +211,7 @@ function getExtras(descriptor) {
  */
 function buildTableRow(descriptor, allDescriptors) {
     const typeIcon = `<span class="legend"><span class="legend-icon ${descriptor.type}"></span></span>`;
-    const id = `<a id="${descriptor.id}"></a><a href="#${descriptor.id}">${descriptor.id}</a>`;
+    const id = `<a id="${descriptor.id}"></a><a href="#${descriptor.id}" class="descriptor-id-link">${descriptor.id}</a>`;
     const title = `<span style="white-space: normal;">${escapeHtml(descriptor.title || '')}</span>`;
     const contained = getContainedDescriptors(descriptor, allDescriptors);
     const extras = `<span style="white-space: normal;">${getExtras(descriptor)}</span>`;
