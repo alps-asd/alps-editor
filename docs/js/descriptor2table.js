@@ -111,10 +111,13 @@ function getDescriptorPropValue(key, descriptor) {
             return createMetaItem('rt', value, 'rt-tag', `#${value}`);
 
         case 'doc':
-            if (value.length > 140) {
-                return createMetaItem('doc', value, 'doc-tag clickable', '', value);
+            // doc can be string or object {value: "..."}
+            const docText = typeof value === 'object' ? (value.value || '') : value;
+            if (!docText) return '';
+            if (docText.length > 140) {
+                return createMetaItem('doc', docText, 'doc-tag clickable', '', docText);
             }
-            return createMetaItem('doc', value, 'doc-tag');
+            return createMetaItem('doc', docText, 'doc-tag');
 
         default:
             return createMetaItem(key, value);

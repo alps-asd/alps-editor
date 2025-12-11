@@ -13,16 +13,16 @@ Visit [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) t
 ### Local Development
 
 ```bash
-cd docs && php -S localhost:8080
+npx serve docs
 ```
 
-Then open http://localhost:8080/index.html
+Then open http://localhost:3000
 
-### Development with Claude Code
+### Development with AI Agents
 
-For browser testing and debugging, install the Chrome DevTools MCP server:
+For browser testing and debugging with AI agents, install the Chrome DevTools MCP server:
 
-See [chrome-devtools-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-chrome-devtools#claude-code) for setup instructions.
+See [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp?tab=readme-ov-file#mcp-client-configuration) for setup instructions.
 
 ## Features
 

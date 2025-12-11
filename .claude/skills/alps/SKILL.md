@@ -90,6 +90,19 @@ This skill responds to natural language requests:
 | State/Page | PascalCase | `HomePage`, `ProductDetail`, `ShoppingCart` |
 | Semantic field | camelCase | `userId`, `productName`, `createdAt` |
 
+### Safe Transition Naming Rule
+
+**IMPORTANT**: Safe transitions (`go*`) MUST include the target state name in their id.
+
+- `rt="#ProductList"` → id must be `goProductList` (or `goToProductList`)
+- `rt="#UserProfile"` → id must be `goUserProfile` (or `goToUserProfile`)
+
+**Invalid examples:**
+- `goStart` with `rt="#ProductList"` - Wrong! Should be `goProductList`
+- `goNext` with `rt="#Checkout"` - Wrong! Should be `goCheckout`
+
+This rule ensures consistency and makes the diagram self-documenting. When a transition has no source state (entry point), it will be displayed as originating from `UnknownState` in the diagram.
+
 ### Determining idempotent: PUT vs DELETE
 
 Context clues for AI inference:
@@ -201,6 +214,7 @@ Use `asd --validate <file>` to validate ALPS profiles. Output conforms to the [v
 - W002: Safe transition naming (should start with 'go')
 - W003: Unsafe/idempotent naming (should start with 'do')
 - W004: Orphan descriptor
+- W005: Safe transition id does not match rt target (e.g., `goStart` with `rt="#ProductList"` should be `goProductList`)
 
 ### Suggestion Codes (S)
 - S001: Missing doc on transition

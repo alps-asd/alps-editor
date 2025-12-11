@@ -129,73 +129,111 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     <descriptor id="quantity" def="https://schema.org/Quantity" title="quantity"/>
     <descriptor id="email" def="https://schema.org/email" title="email"/>
     <descriptor id="address" def="https://schema.org/address" title="address"/>
+    <descriptor id="reviewBody" def="https://schema.org/reviewBody" title="review text"/>
+    <descriptor id="rating" def="https://schema.org/ratingValue" title="rating"/>
 
     <!-- Taxonomy -->
-    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection">
+    <descriptor id="Home" title="Home Page" tag="flow-browse">
+        <descriptor href="#goProductList"/>
+    </descriptor>
+
+    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection, flow-browse">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
         <descriptor href="#goProductDetail"/>
         <descriptor href="#goCart"/>
-        <descriptor href="#goProductList"/>
     </descriptor>
 
-    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item">
+    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item, flow-browse, flow-purchase, flow-review">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
         <descriptor href="#price"/>
         <descriptor href="#goProductList"/>
         <descriptor href="#doAddToCart"/>
+        <descriptor href="#goReviewForm"/>
     </descriptor>
 
-    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection">
+    <descriptor id="ReviewForm" def="https://schema.org/Review" title="Review Form" tag="flow-review">
         <descriptor href="#id"/>
+        <descriptor href="#reviewBody"/>
+        <descriptor href="#rating"/>
+        <descriptor href="#goProductDetail"/>
+        <descriptor href="#doSubmitReview"/>
+    </descriptor>
+
+    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection, flow-purchase">
+        <descriptor href="#id"/>
+        <descriptor href="#name"/>
+        <descriptor href="#price"/>
+        <descriptor href="#quantity"/>
         <descriptor href="#goProductList"/>
+        <descriptor href="#goProductDetail"/>
         <descriptor href="#goCheckout"/>
         <descriptor href="#doUpdateQuantity"/>
         <descriptor href="#doRemoveItem"/>
     </descriptor>
 
-    <descriptor id="Checkout" title="Checkout">
+    <descriptor id="Checkout" title="Checkout" tag="flow-purchase">
+        <doc>Available only when cart has at least one item. Guest users can proceed without account.</doc>
+        <descriptor href="#price"/>
         <descriptor href="#email"/>
         <descriptor href="#address"/>
+        <descriptor href="#goCart"/>
         <descriptor href="#goPayment"/>
     </descriptor>
 
-    <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment">
+    <descriptor id="Payment" def="https://schema.org/PayAction" title="Payment" tag="flow-purchase">
+        <descriptor href="#price"/>
+        <descriptor href="#goCart"/>
         <descriptor href="#doPayment"/>
     </descriptor>
 
     <!-- Choreography -->
-    <descriptor id="goProductList" type="safe" rt="#ProductList" title="View product list">
+    <descriptor id="goProductList" type="safe" rt="#ProductList" rel="collection" title="View product list"/>
+
+    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" rel="item" title="View product details">
         <descriptor href="#id"/>
     </descriptor>
 
-    <descriptor id="goProductDetail" type="safe" rt="#ProductDetail" title="View product details">
-        <descriptor href="#id"/>
-    </descriptor>
-
-    <descriptor id="goCart" type="safe" rt="#Cart" title="View shopping cart"/>
+    <descriptor id="goCart" type="safe" rt="#Cart" rel="collection" title="View shopping cart"/>
 
     <descriptor id="goCheckout" type="safe" rt="#Checkout" title="Proceed to checkout"/>
 
     <descriptor id="goPayment" type="safe" rt="#Payment" title="Proceed to payment"/>
 
-    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add product to cart">
+    <descriptor id="goReviewForm" type="safe" rt="#ReviewForm" title="Write a review">
+        <descriptor href="#id"/>
+    </descriptor>
+
+    <descriptor id="doAddToCart" type="unsafe" rt="#Cart" title="Add to cart">
+        <doc>Adds product to cart. If the same product already exists, increments quantity instead of creating a duplicate entry.</doc>
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
 
     <descriptor id="doUpdateQuantity" type="idempotent" rt="#Cart" title="Update item quantity">
+        <doc>Updates the quantity of an item in the cart. Set to 0 to remove.</doc>
         <descriptor href="#id"/>
         <descriptor href="#quantity"/>
     </descriptor>
+
     <descriptor id="doRemoveItem" type="idempotent" rt="#Cart" title="Remove item from cart">
+        <doc>Removes the specified item from the cart completely.</doc>
         <descriptor href="#id"/>
     </descriptor>
 
-    <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment"/>
+    <descriptor id="doSubmitReview" type="unsafe" rt="#ProductDetail" title="Submit review">
+        <doc>Submits a product review with rating and comment.</doc>
+        <descriptor href="#id"/>
+        <descriptor href="#reviewBody"/>
+        <descriptor href="#rating"/>
+    </descriptor>
+
+    <descriptor id="doPayment" type="idempotent" rt="#ProductList" title="Complete payment">
+        <doc>Processes payment and completes the order. Clears the cart on success.</doc>
+    </descriptor>
 
 </alps>`;
 
@@ -256,7 +294,41 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                 // Ctrl+S saves Profile (ALPS source)
                 document.getElementById('downloadProfile')?.click();
             }
+            // F8 toggles Preview mode on/off (returns to previous mode)
+            if (event.key === 'F8') {
+                event.preventDefault();
+                this.togglePreviewMode();
+            }
         });
+    }
+
+    toggleViewMode() {
+        const selector = document.getElementById('viewMode');
+        if (!selector) return;
+
+        const modes = ['document', 'diagram', 'preview'];
+        const currentIndex = modes.indexOf(selector.value);
+        const nextIndex = (currentIndex + 1) % modes.length;
+
+        selector.value = modes[nextIndex];
+        this.applyViewMode(modes[nextIndex]);
+    }
+
+    togglePreviewMode() {
+        const selector = document.getElementById('viewMode');
+        if (!selector) return;
+
+        if (selector.value === 'preview') {
+            // Return to previous mode (stored before entering preview)
+            const previousMode = this.previousViewMode || 'document';
+            selector.value = previousMode;
+            this.applyViewMode(previousMode);
+        } else {
+            // Save current mode and switch to preview
+            this.previousViewMode = selector.value;
+            selector.value = 'preview';
+            this.applyViewMode('preview');
+        }
     }
 
     setupDragAndDrop() {
@@ -388,13 +460,11 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         const selector = document.getElementById('viewMode');
         if (!selector) return;
 
-        // Load saved preference
-        const saved = localStorage.getItem('viewMode');
-        if (saved) selector.value = saved;
+        // Always start with Document mode (default)
+        selector.value = 'document';
 
         selector.addEventListener('change', (event) => {
             const mode = event.target.value;
-            localStorage.setItem('viewMode', mode);
             this.applyViewMode(mode);
         });
     }

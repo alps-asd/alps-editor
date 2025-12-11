@@ -665,7 +665,7 @@ ${linksHtml}
 const tagDescriptorMap = ${JSON.stringify(tagDescriptorMap)};
 
 // Changes color of SVG elements by title (matching production ASD)
-const changeColorByTitle = (titleOrClass, newNodeColor, newEdgeColor) => {
+const changeColorByTitle = (titleOrClass, newNodeColor, newEdgeColor, highlight = false) => {
     const elements = Array.from(document.getElementsByTagName('g'));
     elements.forEach(element => {
         const titleElement = element.getElementsByTagName('title')[0];
@@ -674,7 +674,17 @@ const changeColorByTitle = (titleOrClass, newNodeColor, newEdgeColor) => {
             const polygons = Array.from(element.getElementsByTagName('polygon'));
             const paths = Array.from(element.getElementsByTagName('path'));
             polygons.forEach(polygon => polygon.setAttribute('fill', newNodeColor));
-            paths.forEach(path => path.setAttribute('stroke', newEdgeColor));
+            paths.forEach(path => {
+                path.setAttribute('stroke', newEdgeColor);
+                // Emphasize edges when highlighted
+                if (highlight) {
+                    path.setAttribute('stroke-width', '3');
+                    path.style.filter = 'drop-shadow(0 0 4px ' + newEdgeColor + ')';
+                } else {
+                    path.setAttribute('stroke-width', '1');
+                    path.style.filter = '';
+                }
+            });
         }
     });
 };
@@ -683,7 +693,7 @@ const changeColorByTitle = (titleOrClass, newNodeColor, newEdgeColor) => {
 const setupTagEventListener = (eventName, ids, color, defaultColor = 'lightgrey', defaultEdgeColor = 'black') => {
     const changeColor = (useDefault) => {
         ids.forEach(id => {
-            changeColorByTitle(id, useDefault ? defaultColor : color, useDefault ? defaultEdgeColor : color);
+            changeColorByTitle(id, useDefault ? defaultColor : color, useDefault ? defaultEdgeColor : color, !useDefault);
             // Also highlight table row
             const row = document.querySelector('tr:has(a[href="#' + id + '"])');
             if (row) row.style.backgroundColor = useDefault ? '' : '#fffde7';
@@ -833,29 +843,32 @@ document.querySelectorAll('input[name="sizeMode"]').forEach(radio => {
     });
 });
 
-// Auto-select size mode based on SVG width (run once on load)
+// Auto-select size mode based on SVG width vs container width
 function autoSelectSizeMode() {
     const svgContainer = document.getElementById('svg-container');
-    const svg = svgContainer?.querySelector('svg');
-    if (!svgContainer || !svg) return;
-
-    // Get SVG's natural width from attribute
-    const svgWidth = svg.getAttribute('width');
-    const svgWidthPx = svgWidth ? parseFloat(svgWidth) * (svgWidth.includes('pt') ? 1.333 : 1) : 0;
-    const containerWidth = svgContainer.clientWidth;
-
+    const svgElement = document.querySelector('#svg-graph svg');
     const fitRadio = document.querySelector('input[name="sizeMode"][value="fit"]');
     const originalRadio = document.querySelector('input[name="sizeMode"][value="original"]');
 
-    if (svgWidthPx > containerWidth) {
-        // SVG is wider than container - start with Fit
-        svgContainer.classList.add('fit-width');
-        if (fitRadio) fitRadio.checked = true;
-    } else {
-        // SVG fits - start with Original
-        svgContainer.classList.remove('fit-width');
-        if (originalRadio) originalRadio.checked = true;
-    }
+    if (!svgContainer || !svgElement) return;
+
+    // Temporarily remove fit-width to measure SVG's natural size
+    svgContainer.classList.remove('fit-width');
+
+    // Use setTimeout to allow reflow before measuring
+    setTimeout(() => {
+        const svgWidth = svgElement.getBoundingClientRect().width;
+        const containerWidth = svgContainer.clientWidth;
+
+        // If SVG is wider than container, auto-select Fit to width
+        if (svgWidth > containerWidth) {
+            svgContainer.classList.add('fit-width');
+            if (fitRadio) fitRadio.checked = true;
+        } else {
+            svgContainer.classList.remove('fit-width');
+            if (originalRadio) originalRadio.checked = true;
+        }
+    }, 0);
 }
 
 // Center horizontal scroll position (for Original mode)
@@ -941,8 +954,15 @@ document.addEventListener('DOMContentLoaded', autoSelectSizeMode);
                 type: desc.getAttribute('type'),
                 rt: desc.getAttribute('rt'),
                 tag: desc.getAttribute('tag'),
-                def: desc.getAttribute('def') // Schema.org definition indicates ontology
+                def: desc.getAttribute('def'), // Schema.org definition indicates ontology
+                rel: desc.getAttribute('rel')
             };
+
+            // Extract doc element text content
+            const docElement = desc.querySelector(':scope > doc');
+            if (docElement) {
+                descriptor.doc = docElement.textContent.trim();
+            }
 
             // Extract nested descriptors (href references) - only direct children
             const nestedDescs = Array.from(desc.children).filter(child => child.tagName === 'descriptor');
