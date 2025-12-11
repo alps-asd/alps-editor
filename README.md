@@ -1,6 +1,6 @@
 # ALPS Online Editor
 
-<img src="docs/images/alps-editor-hero.png" alt="ALPS Editor" style="max-width: 400px; width: 100%; height: auto; border-radius: 10px;">
+<img src="docs/images/alps-editor-hero.png" alt="ALPS Editor" width="200px">
 
 ALPS Online Editor is a web-based editor for creating and editing Application-Level Profile Semantics (ALPS) documents. It supports both XML and JSON formats with real-time validation, auto-completion, and live preview features.
 
