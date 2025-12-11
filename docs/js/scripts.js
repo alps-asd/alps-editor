@@ -122,9 +122,10 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         example for ALPS implementation in online shopping contexts.</doc>
 
     <!-- Links -->
-    <link rel="self" href="https://example.com/alps/shopping.xml"/>
-    <link rel="help" href="https://alps.io/spec/"/>
-    <link rel="describedby" href="https://schema.org/"/>
+    <link rel="help" href="https://alps-asd.github.io/alps-editor/user-guide.html" title="ALPS Editor User Guide"/>
+    <link rel="help" href="https://www.app-state-diagram.com/" title="app-state-diagram"/>
+    <link rel="help" href="https://alps.io/spec/" title="ALPS Specification"/>
+    <link rel="describedby" href="https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html" title="Vocabulary Guide"/>
 
     <!-- Ontology -->
     <descriptor id="id" def="https://schema.org/identifier" title="identifier"/>
@@ -880,11 +881,11 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
     jumpToId(id) {
         if (!this.editor || !id) return;
-        
+
         // Search for id="searchId" in the editor content
         const searchTerm = `id="${id}"`;
         console.log('Searching for:', searchTerm);
-        
+
         // Find the text first
         const range = this.editor.find(searchTerm, {
             backwards: false,
@@ -893,17 +894,17 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             wholeWord: false,
             regExp: false
         });
-        
+
         if (range) {
             // Get the line number where the match was found
             const lineNumber = range.start.row;
-            
+
             // Select the entire line
             this.editor.selection.selectLine();
-            
+
             console.log('Selected entire line:', lineNumber);
         }
-        
+
         // Focus the editor after search
         this.editor.focus();
     }
