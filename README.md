@@ -1,6 +1,6 @@
 # ALPS Online Editor
 
-<img src="https://www.app-state-diagram.com/images/home.png" width=100px>
+<img src="docs/images/alps-editor-hero.png" alt="ALPS Editor" style="max-width: 400px; width: 100%; height: auto; border-radius: 10px;">
 
 ALPS Online Editor is a web-based editor for creating and editing Application-Level Profile Semantics (ALPS) documents. It supports both XML and JSON formats with real-time validation, auto-completion, and live preview features.
 
@@ -9,6 +9,8 @@ ALPS Online Editor is a web-based editor for creating and editing Application-Le
 ### Online Version
 
 Visit [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) to use the editor directly in your browser. No server required - runs entirely client-side.
+
+📖 **[Read the User Guide](https://alps-asd.github.io/alps-editor/user-guide.html)** for detailed instructions and tips.
 
 ## Development
 
@@ -74,6 +76,7 @@ The editor performs two types of validation:
 
 ## References
 
-- [app-state-diagram](https://www.app-state-diagram.com/)
-- [ALPS Specification](http://alps.io/)
-- [Schema.org](https://schema.org) (source for semantic terms)
+- [User Guide](https://alps-asd.github.io/alps-editor/user-guide.html) - Complete guide to using the editor
+- [app-state-diagram](https://www.app-state-diagram.com/) - ALPS visualization tool
+- [ALPS Specification](http://alps.io/) - Official ALPS documentation
+- [Vocabulary Guide](https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html) - Schema.org semantic terms for ALPS

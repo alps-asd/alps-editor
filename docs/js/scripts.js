@@ -103,9 +103,12 @@ Quick tips:
 
 ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
 
-Learn more about ALPS:
-- Official ALPS website: http://alps.io/
+Learn more:
+- User Guide: https://alps-asd.github.io/alps-editor/user-guide.html
+- ALPS Editor: https://github.com/alps-asd/alps-editor
+- ALPS Specification: http://alps.io/
 - app-state-diagram: https://www.app-state-diagram.com/
+- Vocabulary: https://www.app-state-diagram.com/manuals/1.0/en/schema-org.html
 
 Happy modeling! Remember, solid semantics supports the long-term evolution of your APIs. :)
 -->
@@ -304,18 +307,6 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         });
     }
 
-    toggleViewMode() {
-        const selector = document.getElementById('viewMode');
-        if (!selector) return;
-
-        const modes = ['document', 'diagram', 'preview'];
-        const currentIndex = modes.indexOf(selector.value);
-        const nextIndex = (currentIndex + 1) % modes.length;
-
-        selector.value = modes[nextIndex];
-        this.applyViewMode(modes[nextIndex]);
-    }
-
     togglePreviewMode() {
         const selector = document.getElementById('viewMode');
         if (!selector) return;
@@ -503,61 +494,6 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         // Hide diagram controls in diagram mode (Label/Size selectors)
         const controls = doc.querySelector('.diagram-controls');
         if (controls) controls.style.display = isDiagramOnly ? 'none' : '';
-    }
-
-    handleApiError(errorResponse) {
-        const decoder = new TextDecoder('utf-8');
-        let errorData;
-
-        try {
-            const decodedData = decoder.decode(errorResponse.data);
-            errorData = JSON.parse(decodedData);
-        } catch (parseError) {
-            this.handleError(parseError, 'Error parsing error response');
-            errorData = { 'error-message': 'Unknown error occurred' };
-        }
-
-        if (errorData && errorData['error-message']) {
-            return errorData['invalid-descriptor'] ? this.addInvalidWordAnnotations(errorData, this.editor.getValue()) : [{
-                row: errorData['line'] ? errorData['line'] - 1 : 0,
-                column: 0,
-                text: `API Error (${errorResponse.status}): ${errorData['error-message']}`,
-                type: 'error'
-            }];
-        } else {
-            return [{
-                row: 0,
-                column: 0,
-                text: `API Error (${errorResponse.status}): ${errorData['class'] || ''}:${errorData['exception-message'] || 'Unknown error'}`,
-                type: 'error'
-            }];
-        }
-    }
-
-    addInvalidWordAnnotations(errorData, content) {
-        const invalidDescriptor = errorData['invalid-descriptor'];
-        const searchWord = '"#' + invalidDescriptor + '"';
-        const errors = [];
-
-        if (invalidDescriptor) {
-            content.split('\n').forEach((line, index) => {
-                if (line.includes(searchWord)) {
-                    errors.push({
-                        row: index,
-                        column: line.indexOf(searchWord),
-                        text: `API Error: ${errorData['error-message']} ("${invalidDescriptor}")`,
-                        type: 'error'
-                    });
-                }
-            });
-        }
-
-        return errors.length ? errors : [{
-            row: 0,
-            column: 0,
-            text: `API Error: ${errorData['error-message']}`,
-            type: 'error'
-        }];
     }
 
     displayErrors(errors) {
