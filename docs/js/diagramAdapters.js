@@ -386,6 +386,33 @@ td a:hover{text-decoration:underline;}
 window.alpsRelationships = ${JSON.stringify(relationships).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')};
 console.log('Loaded relationships:', window.alpsRelationships);
 
+// Scroll to descriptor row and highlight it
+function scrollToDescriptor(id) {
+    const targetRow = document.getElementById('descriptor-' + id);
+    if (targetRow) {
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetRow.style.backgroundColor = '#ffffd0';
+        setTimeout(() => {
+            targetRow.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
+// Listen for messages from parent (for Preview mode scroll)
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'scrollToDescriptor') {
+        scrollToDescriptor(event.data.id);
+    }
+});
+
+// Forward F8 key to parent for preview toggle (when iframe has focus)
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'F8' && window.parent !== window) {
+        event.preventDefault();
+        window.parent.postMessage({ type: 'togglePreview' }, '*');
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add click handlers to all SVG elements with href="#something"
     const svgLinks = document.querySelectorAll('svg a[href^="#"], svg a[*|href^="#"]');
@@ -403,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Extracted ID:', id);
 
                 if (window.parent !== window) {
-                    // In iframe (editor mode): Send message to parent window to search for this ID in the editor
+                    // In iframe (editor mode): Send message to parent window
                     window.parent.postMessage({
                         type: 'jumpToId',
                         id: id
@@ -411,14 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Message sent to parent');
                 } else {
                     // Standalone (downloaded HTML): Scroll to table row
-                    const targetRow = document.getElementById('descriptor-' + id);
-                    if (targetRow) {
-                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        targetRow.style.backgroundColor = '#ffffd0';
-                        setTimeout(() => {
-                            targetRow.style.backgroundColor = '';
-                        }, 2000);
-                    }
+                    scrollToDescriptor(id);
                 }
             }
         });

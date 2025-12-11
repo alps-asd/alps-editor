@@ -920,7 +920,24 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
             if (event.data && event.data.type === 'jumpToId') {
                 const id = event.data.id;
                 console.log('Jumping to ID:', id);
-                this.jumpToId(id);
+
+                // In Preview mode, scroll to table row instead of editor
+                const viewMode = document.getElementById('viewMode')?.value;
+                if (viewMode === 'preview') {
+                    const iframe = document.getElementById('preview-frame');
+                    if (iframe?.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'scrollToDescriptor',
+                            id: id
+                        }, '*');
+                    }
+                } else {
+                    this.jumpToId(id);
+                }
+            }
+            // Handle F8 from iframe
+            if (event.data && event.data.type === 'togglePreview') {
+                this.togglePreviewMode();
             }
         });
     }
