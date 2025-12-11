@@ -20,7 +20,7 @@ Visit [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) t
 npx serve docs
 ```
 
-Then open http://localhost:3000
+Then open <http://localhost:3000>
 
 ### AI Agents
 
