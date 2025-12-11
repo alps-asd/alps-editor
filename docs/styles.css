@@ -59,6 +59,12 @@ body, html {
     border-radius: 3px;
 }
 
+.download-menu summary.disabled {
+    background-color: #999;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .download-menu summary::-webkit-details-marker {
     display: none;
 }

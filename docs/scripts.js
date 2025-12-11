@@ -611,7 +611,14 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     }
 
     updateValidationMark(isValid) {
-        document.getElementById('validationMark').textContent = isValid ? '✅' : '❌';
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            if (isValid) {
+                downloadBtn.classList.remove('disabled');
+            } else {
+                downloadBtn.classList.add('disabled');
+            }
+        }
     }
 
     setupDownloadButton() {
