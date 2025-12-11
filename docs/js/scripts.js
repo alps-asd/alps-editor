@@ -91,13 +91,15 @@ class AlpsEditor {
 <!--
 Welcome to Alps Editor! Let's make API design fun and effective.
 
+Keyboard shortcuts:
+- F1: Show command palette (lists all shortcuts)
+- F8: Toggle Preview mode
+- Ctrl + Space: Show auto-completion snippets
+- Ctrl + S: Download your work
+
 Quick tips:
-- Press Ctrl + Space to show snippets for auto-completion (suggested terms are from Schema.org)
-- To start from scratch, delete all content and press Ctrl + Space, then select "Skeleton"
-  (For JSON format, type "{" first)
-- Drag and drop an ALPS file (JSON, XML, or HTML) into the editor to open it
-  (For HTML files, the ALPS profile contained within will be extracted)
-- Hit Ctrl + S to download your work anytime
+- To start from scratch, clear content and press Ctrl + Space, then select "Skeleton"
+- Drag and drop an ALPS file (JSON, XML, or HTML) to open it
 
 ALPS bridges vision and implementation, creating APIs that speak business and tech fluently.
 
