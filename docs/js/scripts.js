@@ -143,7 +143,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         <descriptor href="#goProductList"/>
     </descriptor>
 
-    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection, flow-browse">
+    <descriptor id="ProductList" def="https://schema.org/ItemList" title="Product List" tag="collection flow-browse">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
@@ -151,7 +151,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         <descriptor href="#goCart"/>
     </descriptor>
 
-    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item, flow-browse, flow-purchase, flow-review">
+    <descriptor id="ProductDetail" def="https://schema.org/Product" title="Product Detail" tag="item flow-browse flow-purchase flow-review">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#description"/>
@@ -169,7 +169,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
         <descriptor href="#doSubmitReview"/>
     </descriptor>
 
-    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection, flow-purchase">
+    <descriptor id="Cart" def="https://schema.org/Cart" title="Shopping Cart" tag="collection flow-purchase">
         <descriptor href="#id"/>
         <descriptor href="#name"/>
         <descriptor href="#price"/>
