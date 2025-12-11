@@ -10,7 +10,9 @@ ALPS Online Editor is a web-based editor for creating and editing Application-Le
 
 Visit [alps-asd.github.io/alps-editor](https://alps-asd.github.io/alps-editor) to use the editor directly in your browser. No server required - runs entirely client-side.
 
-### Local Development
+## Development
+
+### Local Server
 
 ```bash
 npx serve docs
@@ -18,11 +20,9 @@ npx serve docs
 
 Then open http://localhost:3000
 
-### Development with AI Agents
+### AI Agents
 
-For browser testing and debugging with AI agents, install the Chrome DevTools MCP server:
-
-See [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp?tab=readme-ov-file#mcp-client-configuration) for setup instructions.
+For browser testing and debugging with AI agents, see [chrome-devtools-mcp](https://github.com/anthropics/claude-code/tree/main/chrome-devtools-mcp) for setup instructions.
 
 ## Features
 
@@ -59,8 +59,10 @@ See [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp?
 
 ## Keyboard Shortcuts
 
+- `F1`: Show command palette (lists all shortcuts)
+- `F8`: Toggle Preview mode
 - `Ctrl + Space`: Show auto-completion suggestions
-- `Ctrl + S` / `Cmd + S`: Save document
+- `Ctrl + S` / `Cmd + S`: Download document
 - `Tab`: Navigate through snippet placeholders
 - `Shift + Tab`: Navigate backwards through placeholders
 
