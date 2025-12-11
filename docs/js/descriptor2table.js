@@ -14,7 +14,7 @@
  * @property {string} [doc]
  * @property {string} [rel]
  * @property {string} [rt]
- * @property {string[]} [tags]
+ * @property {string} [tag] - space-separated tags
  * @property {Array<{id?: string, href?: string, type?: string}>} [descriptor] - contained descriptors
  * @property {Object} [link] - link relations
  */
@@ -110,7 +110,7 @@ function getDescriptorPropValue(key, descriptor) {
         case 'rt':
             return createMetaItem('rt', value, 'rt-tag', `#${value}`);
 
-        case 'doc':
+        case 'doc': {
             // doc can be string or object {value: "..."}
             const docText = typeof value === 'object' ? (value.value || '') : value;
             if (!docText) return '';
@@ -118,6 +118,7 @@ function getDescriptorPropValue(key, descriptor) {
                 return createMetaItem('doc', docText, 'doc-tag clickable', '', docText);
             }
             return createMetaItem('doc', docText, 'doc-tag');
+        }
 
         default:
             return createMetaItem(key, value);
@@ -188,16 +189,18 @@ function getExtras(descriptor) {
     const extras = [];
 
     extras.push(getDescriptorPropValue('def', descriptor));
-    extras.push(getTagString(descriptor.tags));
+    extras.push(getTagString(descriptor.tag ? descriptor.tag.split(/\s+/) : []));
     extras.push(getDescriptorPropValue('rel', descriptor));
     extras.push(getDescriptorPropValue('rt', descriptor));
     extras.push(getDescriptorPropValue('doc', descriptor));
 
-    // Link relations
+    // Link relations (can be single object or array)
     if (descriptor.link) {
-        const link = descriptor.link;
-        const linkHtml = `link: <a href="${link.href}">${link.title || link.rel}</a>`;
-        extras.push(createMetaItem('link', linkHtml, 'link-tag'));
+        const links = Array.isArray(descriptor.link) ? descriptor.link : [descriptor.link];
+        for (const link of links) {
+            const linkHtml = `<a href="${link.href}">${link.title || link.rel}</a>`;
+            extras.push(createMetaItem('link', linkHtml, 'link-tag'));
+        }
     }
 
     const filtered = extras.filter(e => e);
@@ -308,8 +311,8 @@ function extractTags(descriptors) {
     const tags = new Set();
     for (const desc of descriptors) {
         if (desc.tag) {
-            // tag can be comma-separated
-            desc.tag.split(',').forEach(t => tags.add(t.trim()));
+            // tag is space-separated
+            desc.tag.split(/\s+/).forEach(t => tags.add(t.trim()));
         }
     }
     return [...tags].sort();
@@ -323,7 +326,7 @@ function extractTags(descriptors) {
  */
 function getDescriptorIdsByTag(descriptors, tag) {
     return descriptors
-        .filter(desc => desc.tag && desc.tag.split(',').map(t => t.trim()).includes(tag))
+        .filter(desc => desc.tag && desc.tag.split(/\s+/).includes(tag))
         .map(desc => desc.id);
 }
 

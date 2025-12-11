@@ -276,7 +276,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                     const tagDescriptorMap = {};
                     for (const tag of tags) {
                         tagDescriptorMap[tag] = descriptors
-                            .filter(d => d.tag && d.tag.split(',').map(t => t.trim()).includes(tag))
+                            .filter(d => d.tag && d.tag.split(/\s+/).includes(tag))
                             .map(d => d.id);
                     }
 
