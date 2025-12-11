@@ -1,5 +1,5 @@
 // Diagram generator adapters for switching between ASD and alps2dot
-import { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, extractLinks, generateLinksHtml, escapeHtml } from './descriptor2table.js';
+import { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, getDescriptorIdsByTag, extractLinks, generateLinksHtml, escapeHtml } from './descriptor2table.js';
 
 class DiagramAdapter {
     constructor(name) {
@@ -275,9 +275,7 @@ class Alps2DotAdapter extends DiagramAdapter {
                     // Build tag-to-descriptorIds map for event handling
                     const tagDescriptorMap = {};
                     for (const tag of tags) {
-                        tagDescriptorMap[tag] = descriptors
-                            .filter(d => d.tag && d.tag.split(/\s+/).includes(tag))
-                            .map(d => d.id);
+                        tagDescriptorMap[tag] = getDescriptorIdsByTag(descriptors, tag);
                     }
 
                     // Extract links

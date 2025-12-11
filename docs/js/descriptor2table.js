@@ -393,9 +393,9 @@ ${items}
 }
 
 // Export for ES modules (browser)
-export { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, extractLinks, generateLinksHtml, escapeHtml, isUrl };
+export { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, getDescriptorIdsByTag, extractLinks, generateLinksHtml, escapeHtml, isUrl };
 
 // Export for CommonJS (Node.js)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, extractLinks, generateLinksHtml, escapeHtml, isUrl };
+    module.exports = { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, getDescriptorIdsByTag, extractLinks, generateLinksHtml, escapeHtml, isUrl };
 }
