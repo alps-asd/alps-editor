@@ -18,6 +18,12 @@ cd docs && php -S localhost:8080
 
 Then open http://localhost:8080/index.html
 
+### Development with Claude Code
+
+For browser testing and debugging, install the Chrome DevTools MCP server:
+
+See [chrome-devtools-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-chrome-devtools#mcp-client-configuration) for setup instructions.
+
 ## Features
 
 ### Interactive Diagram Experience
