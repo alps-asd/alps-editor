@@ -126,15 +126,12 @@ body, html {
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 #editor {
     width: 100%;
     flex-grow: 1;
-}
-
-#preview-container {
-    position: relative;
 }
 
 #preview-frame {
