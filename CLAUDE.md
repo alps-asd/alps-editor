@@ -25,11 +25,12 @@ Then open http://localhost:8080/index.html
 ├── LICENSE
 ├── CLAUDE.md
 ├── .gitignore
-├── examples/           # Sample ALPS files
-│   └── amazon.json
 └── docs/               # GitHub Pages (public site)
     ├── index.html      # Main HTML page
-    ├── alps.json       # ALPS JSON schema for validation
+    ├── schemas/
+    │   └── alps.json   # ALPS JSON schema for validation
+    ├── examples/
+    │   └── amazon.json # Sample ALPS file
     └── js/
         ├── scripts.js          # Main AlpsEditor class
         ├── diagramAdapters.js  # ALPS→DOT + Graphviz WASM

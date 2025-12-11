@@ -228,7 +228,7 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
                     }
                 };
             } else {
-                const schemaResponse = await axios.get('alps.json');
+                const schemaResponse = await axios.get('schemas/alps.json');
                 this.alpsSchema = schemaResponse.data;
             }
         } catch (error) {

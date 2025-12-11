@@ -22,7 +22,7 @@ Then open http://localhost:8080/index.html
 
 For browser testing and debugging, install the Chrome DevTools MCP server:
 
-See [chrome-devtools-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-chrome-devtools#mcp-client-configuration) for setup instructions.
+See [chrome-devtools-mcp](https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-chrome-devtools#claude-code) for setup instructions.
 
 ## Features
 
