@@ -1,5 +1,5 @@
 // Diagram generator adapters for switching between ASD and alps2dot
-import { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, extractLinks, generateLinksHtml } from './descriptor2table.js';
+import { descriptor2table, flattenDescriptors, extractTags, generateTagSelector, extractLinks, generateLinksHtml, escapeHtml } from './descriptor2table.js';
 
 class DiagramAdapter {
     constructor(name) {
@@ -294,9 +294,11 @@ class Alps2DotAdapter extends DiagramAdapter {
                     // Get title and doc from ALPS
                     const alpsTitle = alpsData?.alps?.title || alpsData?.title || 'ALPS Profile';
                     const alpsDoc = alpsData?.alps?.doc?.value || alpsData?.alps?.doc || alpsData?.doc?.value || alpsData?.doc || '';
+                    const safeAlpsTitle = escapeHtml(alpsTitle);
+                    const safeAlpsDoc = escapeHtml(alpsDoc);
 
                     // Return the SVG directly as data URL for iframe-less display
-                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${alpsTitle}</title>
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${safeAlpsTitle}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/3.0.1/github-markdown.min.css">
 <style>
 html{scroll-behavior:smooth;}
@@ -653,8 +655,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
 <script src="https://unpkg.com/viz.js@2.1.2/lite.render.js"></script>
 </head><body><div class="markdown-body">
-<h1>${alpsTitle}</h1>
-<p>${alpsDoc}</p>
+<h1>${safeAlpsTitle}</h1>
+<p>${safeAlpsDoc}</p>
 <div id="svg-container"><div id="svg-graph">${svgString}</div></div>
 <div class="selector-container">
     <div class="selector-row">
