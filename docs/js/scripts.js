@@ -854,6 +854,9 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
     setupDiagramClickHandler() {
         // Listen for messages from iframe diagram
         window.addEventListener('message', (event) => {
+            // Validate origin for defense-in-depth security
+            if (event.origin !== window.location.origin) return;
+
             if (event.data && event.data.type === 'jumpToId') {
                 const id = event.data.id;
                 console.log('Jumping to ID:', id);
