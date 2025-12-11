@@ -133,9 +133,10 @@ function getDescriptorPropValue(key, descriptor) {
 function getTagString(tags) {
     if (!tags || tags.length === 0) return '';
 
-    const tagLinks = tags.map(tag =>
-        `<span class="meta-tag tag-tag"><a href="#tag-${tag}">${tag}</a></span>`
-    );
+    const tagLinks = tags.map(tag => {
+        const safeTag = escapeHtml(tag);
+        return `<span class="meta-tag tag-tag"><a href="#tag-${safeTag}">${safeTag}</a></span>`;
+    });
 
     return `<span class="meta-item"><span class="meta-label">tag:</span><span class="meta-values">${tagLinks.join(' ')}</span></span>`;
 }
@@ -174,7 +175,8 @@ function getContainedDescriptors(descriptor, allDescriptors) {
     const links = contained.map(desc => {
         const typeClass = desc.type;
         const typeTitle = typeClass.charAt(0).toUpperCase() + typeClass.slice(1);
-        return `<span class="type-indicator-small ${typeClass}" title="${typeTitle}"></span><a href="#${desc.id}">${desc.id}</a>`;
+        const safeId = escapeHtml(desc.id);
+        return `<span class="type-indicator-small ${typeClass}" title="${typeTitle}"></span><a href="#${safeId}">${safeId}</a>`;
     });
 
     return links.join('<br>');
@@ -198,7 +200,7 @@ function getExtras(descriptor) {
     if (descriptor.link) {
         const links = Array.isArray(descriptor.link) ? descriptor.link : [descriptor.link];
         for (const link of links) {
-            const linkHtml = `<a href="${link.href}">${link.title || link.rel}</a>`;
+            const linkHtml = `<a href="${escapeHtml(link.href)}">${escapeHtml(link.title || link.rel)}</a>`;
             extras.push(createMetaItem('link', linkHtml, 'link-tag'));
         }
     }
@@ -217,12 +219,13 @@ function getExtras(descriptor) {
  */
 function buildTableRow(descriptor, allDescriptors) {
     const typeIcon = `<span class="legend"><span class="legend-icon ${descriptor.type}"></span></span>`;
-    const id = `<a id="${descriptor.id}"></a><a href="#${descriptor.id}" class="descriptor-id-link">${descriptor.id}</a>`;
+    const safeId = escapeHtml(descriptor.id);
+    const id = `<a id="${safeId}"></a><a href="#${safeId}" class="descriptor-id-link">${safeId}</a>`;
     const title = `<span style="white-space: normal;">${escapeHtml(descriptor.title || '')}</span>`;
     const contained = getContainedDescriptors(descriptor, allDescriptors);
     const extras = `<span style="white-space: normal;">${getExtras(descriptor)}</span>`;
 
-    return `<tr id="descriptor-${descriptor.id}">
+    return `<tr id="descriptor-${safeId}">
   <td align="center">${typeIcon}</td>
   <td align="left">${id}</td>
   <td align="left">${title}</td>
@@ -338,12 +341,13 @@ function getDescriptorIdsByTag(descriptors, tag) {
 function generateTagSelector(tags) {
     if (tags.length === 0) return '';
 
-    const options = tags.map(tag =>
-        `<span class="selector-option">
-            <input type="checkbox" id="tag-${tag}" class="tag-trigger-checkbox" data-tag="${tag}" name="tag-${tag}">
-            <label for="tag-${tag}"> ${tag}</label>
-        </span>`
-    ).join('');
+    const options = tags.map(tag => {
+        const safeTag = escapeHtml(tag);
+        return `<span class="selector-option">
+            <input type="checkbox" id="tag-${safeTag}" class="tag-trigger-checkbox" data-tag="${safeTag}" name="tag-${safeTag}">
+            <label for="tag-${safeTag}"> ${safeTag}</label>
+        </span>`;
+    }).join('');
 
     return `<span class="selector-label">Tags:</span>${options}`;
 }
