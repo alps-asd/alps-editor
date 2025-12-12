@@ -243,8 +243,16 @@ Happy modeling! Remember, solid semantics supports the long-term evolution of yo
 
 </alps>`;
 
-            this.editor.setValue(defaultXml);
-            this.editor.getSession().setMode("ace/mode/xml");
+            // Use pre-loaded content if available (from CLI output)
+            const initialContent = window.ALPS_INITIAL_CONTENT || defaultXml;
+            this.editor.setValue(initialContent);
+            // Auto-detect mode
+            const trimmed = initialContent.trim();
+            if (trimmed.startsWith('{')) {
+                this.editor.getSession().setMode("ace/mode/json");
+            } else {
+                this.editor.getSession().setMode("ace/mode/xml");
+            }
         } catch (error) {
             this.handleError(error, 'Failed to load default XML');
         }
